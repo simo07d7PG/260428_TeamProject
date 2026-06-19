@@ -5,13 +5,17 @@ using UnityEngine;
 
 /// <summary>
 /// 준비 단계의 Merge 그리드, 인벤토리, 폐기 비용을 관리하는 싱글톤 매니저입니다.
-/// 하위 UI 컴포넌트를 자동 생성·참조합니다.
+/// UI는 씬에 직접 배치하고 Inspector에서 연결합니다.
 /// </summary>
 public class PreparationManager : MonoBehaviour
 {
     public const int GridSize = 9;
 
     public static PreparationManager Instance { get; private set; }
+
+    [Header("UI 참조")]
+    [SerializeField] MergeGridUI mergeGridUI;
+    [SerializeField] MergeUIController mergeUIController;
 
     [Header("초기 재료 (비어 있으면 DataManager에서 자동 로드)")]
     [SerializeField] IngredientSO[] starterIngredients;
@@ -21,16 +25,13 @@ public class PreparationManager : MonoBehaviour
     readonly Dictionary<IngredientSO, int> _basicInventory = new();
     readonly List<MergeGridItem> _advancedInventory = new();
 
-    MergeGridUI _mergeGridUI;
-    MergeUIController _mergeUIController;
-
     int _selectedSlotIndex = -1;
     int _garbageDisposalCost;
 
     public int GarbageDisposalCost => _garbageDisposalCost;
     public int SelectedSlotIndex => _selectedSlotIndex;
-    public MergeGridUI MergeGridUI => _mergeGridUI;
-    public MergeUIController MergeUIController => _mergeUIController;
+    public MergeGridUI MergeGridUI => mergeGridUI;
+    public MergeUIController MergeUIController => mergeUIController;
     public IReadOnlyDictionary<IngredientSO, int> BasicInventory => _basicInventory;
     public IReadOnlyList<MergeGridItem> AdvancedInventory => _advancedInventory;
 
@@ -39,19 +40,6 @@ public class PreparationManager : MonoBehaviour
     public event Action<int> OnDisposalCostChanged;
     public event Action<MergeResult> OnMergeCompleted;
     public event Action<int> OnSlotSelected;
-
-    public static PreparationManager EnsureExists()
-    {
-        if (Instance != null)
-            return Instance;
-
-        PreparationManager existing = FindAnyObjectByType<PreparationManager>();
-        if (existing != null)
-            return existing;
-
-        GameObject systemObject = new GameObject("[PreparationSystem]");
-        return systemObject.AddComponent<PreparationManager>();
-    }
 
     void Awake()
     {
@@ -62,10 +50,10 @@ public class PreparationManager : MonoBehaviour
         }
 
         Instance = this;
+        BindSceneReferences();
         AutoLoadConfiguration();
         ClearGrid();
         InitializeStarterInventory();
-        EnsureChildComponents();
     }
 
     void OnDestroy()
@@ -74,21 +62,19 @@ public class PreparationManager : MonoBehaviour
             Instance = null;
     }
 
-    void EnsureChildComponents()
+    void BindSceneReferences()
     {
-        ManagerUtility.EnsureEventSystem();
+        if (mergeGridUI == null)
+            mergeGridUI = FindAnyObjectByType<MergeGridUI>();
 
-        if (GetComponentInChildren<MergeGridUI>(true) == null)
-            PreparationUIViewFactory.Build(transform);
+        if (mergeUIController == null)
+            mergeUIController = FindAnyObjectByType<MergeUIController>();
 
-        _mergeGridUI = GetComponentInChildren<MergeGridUI>(true);
-        _mergeUIController = GetComponentInChildren<MergeUIController>(true);
+        if (mergeGridUI == null)
+            Debug.LogError("[PreparationManager] MergeGridUI가 연결되지 않았습니다. MergeGridPanel에 배치해 주세요.");
 
-        if (_mergeGridUI == null)
-            Debug.LogWarning("[PreparationManager] MergeGridUI를 찾지 못했습니다.");
-
-        if (_mergeUIController == null)
-            Debug.LogWarning("[PreparationManager] MergeUIController를 찾지 못했습니다.");
+        if (mergeUIController == null)
+            Debug.LogError("[PreparationManager] MergeUIController가 연결되지 않았습니다. MergeInfoPanel에 배치해 주세요.");
     }
 
     void AutoLoadConfiguration()

@@ -24,15 +24,6 @@ public class GameManager : MonoBehaviour
         managersRoot.AddComponent<DataManager>();
     }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void OnSceneLoaded()
-    {
-        if (Instance == null)
-            return;
-
-        Instance.EnsureManagersForCurrentState();
-    }
-
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -53,21 +44,10 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 게임 상태를 변경하고 해당 페이즈 Manager를 자동 장착합니다.
+    /// 게임 상태를 변경합니다. 4분 세션 내 페이즈 전환에 사용됩니다.
     /// </summary>
     public void SetState(GameState newState)
     {
         CurrentState = newState;
-        EnsureManagersForCurrentState();
-    }
-
-    void EnsureManagersForCurrentState()
-    {
-        switch (CurrentState)
-        {
-            case GameState.Preparation:
-                PreparationManager.EnsureExists();
-                break;
-        }
     }
 }

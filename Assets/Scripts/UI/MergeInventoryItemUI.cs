@@ -1,16 +1,16 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
 /// 인벤토리 재료를 Merge 그리드로 드래그할 수 있는 UI 슬롯입니다.
-/// Image, Count 텍스트를 자동 탐색합니다.
 /// </summary>
 [RequireComponent(typeof(Image))]
 public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] Image iconImage;
-    [SerializeField] Text countText;
+    [SerializeField] TextMeshProUGUI countText;
 
     IngredientSO _ingredient;
     int _level = 1;
@@ -27,18 +27,7 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
             iconImage = GetComponent<Image>();
 
         if (countText == null)
-            countText = transform.Find("Count")?.GetComponent<Text>();
-    }
-
-    public void Initialize(Image icon, Text countLabel)
-    {
-        if (icon != null)
-            iconImage = icon;
-
-        if (countLabel != null)
-            countText = countLabel;
-
-        ResolveReferences();
+            countText = transform.Find("Count")?.GetComponent<TextMeshProUGUI>();
     }
 
     public void Setup(IngredientSO ingredient, int level, int count)

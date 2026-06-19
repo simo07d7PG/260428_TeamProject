@@ -1,42 +1,40 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
 /// Merge UI 전체를 갱신하고 결과/폐기 비용 피드백을 표시합니다.
-/// 하위·형제 오브젝트를 이름으로 자동 참조합니다.
+/// Inspector에서 참조를 직접 연결합니다.
 /// </summary>
 public class MergeUIController : MonoBehaviour
 {
     [SerializeField] Transform basicInventoryRoot;
     [SerializeField] Transform advancedInventoryRoot;
     [SerializeField] MergeInventoryItemUI inventoryItemPrefab;
-    [SerializeField] Text disposalCostText;
-    [SerializeField] Text feedbackText;
+    [SerializeField] TextMeshProUGUI disposalCostText;
+    [SerializeField] TextMeshProUGUI feedbackText;
     [SerializeField] float feedbackDuration = 2f;
 
     float _feedbackTimer;
 
     void Awake()
     {
-        ResolveReferences();
+        ValidateReferences();
     }
 
-    void ResolveReferences()
+    void ValidateReferences()
     {
-        Transform searchRoot = transform.parent != null ? transform.parent : transform;
-
         if (basicInventoryRoot == null)
-            basicInventoryRoot = ManagerUtility.FindDeepChild(searchRoot, "BasicInventoryPanel");
+            Debug.LogError("[MergeUIController] Basic Inventory Root가 연결되지 않았습니다.");
 
         if (advancedInventoryRoot == null)
-            advancedInventoryRoot = ManagerUtility.FindDeepChild(searchRoot, "AdvancedInventoryPanel");
+            Debug.LogError("[MergeUIController] Advanced Inventory Root가 연결되지 않았습니다.");
+
+        if (inventoryItemPrefab == null)
+            Debug.LogError("[MergeUIController] Inventory Item Prefab이 연결되지 않았습니다.");
 
         if (disposalCostText == null)
-            disposalCostText = ManagerUtility.FindDeepChild(transform, "DisposalCostText")?.GetComponent<Text>();
-
-        if (feedbackText == null)
-            feedbackText = ManagerUtility.FindDeepChild(transform, "FeedbackText")?.GetComponent<Text>();
+            Debug.LogError("[MergeUIController] Disposal Cost Text가 연결되지 않았습니다.");
     }
 
     void OnEnable()
@@ -88,7 +86,7 @@ public class MergeUIController : MonoBehaviour
 
     void RebuildInventory(Transform root, List<InventoryViewData> items)
     {
-        if (root == null)
+        if (root == null || inventoryItemPrefab == null)
             return;
 
         for (int i = root.childCount - 1; i >= 0; i--)
@@ -96,44 +94,9 @@ public class MergeUIController : MonoBehaviour
 
         foreach (InventoryViewData item in items)
         {
-            MergeInventoryItemUI view = CreateInventoryItem(root);
+            MergeInventoryItemUI view = Instantiate(inventoryItemPrefab, root);
             view.Setup(item.ingredient, item.level, item.count);
         }
-    }
-
-    MergeInventoryItemUI CreateInventoryItem(Transform root)
-    {
-        if (inventoryItemPrefab != null)
-            return Instantiate(inventoryItemPrefab, root);
-
-        GameObject itemObject = new GameObject(
-            "InventoryItem",
-            typeof(RectTransform),
-            typeof(Image),
-            typeof(MergeInventoryItemUI));
-        itemObject.transform.SetParent(root, false);
-
-        RectTransform rect = itemObject.GetComponent<RectTransform>();
-        rect.sizeDelta = new Vector2(72f, 72f);
-
-        GameObject countObject = new GameObject("Count", typeof(RectTransform), typeof(Text));
-        countObject.transform.SetParent(itemObject.transform, false);
-        RectTransform countRect = countObject.GetComponent<RectTransform>();
-        countRect.anchorMin = new Vector2(0.6f, 0f);
-        countRect.anchorMax = Vector2.one;
-        countRect.offsetMin = Vector2.zero;
-        countRect.offsetMax = Vector2.zero;
-
-        MergeInventoryItemUI item = itemObject.GetComponent<MergeInventoryItemUI>();
-        Text countLabel = countObject.GetComponent<Text>();
-        countLabel.alignment = TextAnchor.LowerRight;
-        countLabel.fontSize = 14;
-        countLabel.color = Color.white;
-        countLabel.font = ManagerUtility.GetDefaultFont();
-        countLabel.raycastTarget = false;
-
-        item.Initialize(itemObject.GetComponent<Image>(), countLabel);
-        return item;
     }
 
     static List<InventoryViewData> ConvertBasicInventory(IReadOnlyDictionary<IngredientSO, int> inventory)
