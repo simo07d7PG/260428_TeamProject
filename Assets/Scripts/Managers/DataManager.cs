@@ -3,15 +3,47 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Resources 폴더의 ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.
+/// ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.
+/// GameManager와 같은 오브젝트에 자동 장착됩니다.
 /// </summary>
+[DefaultExecutionOrder(-90)]
 public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
 
-    const string IngredientResourcePath = "Ingredients";
-    const string MergeRecipeResourcePath = "MergeRecipes";
-    const string TrendResourcePath = "Trends";
+    // 에디터 실제 경로 (Assets/ScriptableObject/...)
+    static readonly string[] IngredientEditorPaths =
+    {
+        "Assets/ScriptableObject/Ingredient/LV1",
+        "Assets/ScriptableObject/Ingredient/LV2"
+    };
+
+    static readonly string[] MergeRecipeEditorPaths =
+    {
+        "Assets/ScriptableObject/Recipe"
+    };
+
+    static readonly string[] TrendEditorPaths =
+    {
+        "Assets/ScriptableObject/Trends"
+    };
+
+    // 빌드용 Resources 상대 경로 (Assets/Resources/... 와 동일 구조 필요)
+    static readonly string[] IngredientResourcePaths =
+    {
+        "ScriptableObject/Ingredient/LV1",
+        "ScriptableObject/Ingredient/LV2"
+    };
+
+    static readonly string[] MergeRecipeResourcePaths =
+    {
+        "ScriptableObject/Recipe"
+    };
+
+    static readonly string[] TrendResourcePaths =
+    {
+        "ScriptableObject/Trends"
+    };
 
     readonly List<IngredientSO> _ingredients = new();
     readonly List<MergeRecipeSO> _mergeRecipes = new();
@@ -23,26 +55,15 @@ public class DataManager : MonoBehaviour
 
     public bool IsLoaded { get; private set; }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void Bootstrap()
-    {
-        if (FindAnyObjectByType<DataManager>() != null)
-            return;
-
-        var managerObject = new GameObject(nameof(DataManager));
-        managerObject.AddComponent<DataManager>();
-    }
-
     void Awake()
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
             return;
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
         LoadAllData();
     }
 
@@ -58,14 +79,20 @@ public class DataManager : MonoBehaviour
         _mergeRecipes.Clear();
         _trends.Clear();
 
-        _ingredients.AddRange(Resources.LoadAll<IngredientSO>(IngredientResourcePath));
-        _mergeRecipes.AddRange(Resources.LoadAll<MergeRecipeSO>(MergeRecipeResourcePath));
-        _trends.AddRange(Resources.LoadAll<TrendSO>(TrendResourcePath));
+        GameAssetLoader.LoadAll(IngredientEditorPaths, IngredientResourcePaths, _ingredients);
+        GameAssetLoader.LoadAll(MergeRecipeEditorPaths, MergeRecipeResourcePaths, _mergeRecipes);
+        GameAssetLoader.LoadAll(TrendEditorPaths, TrendResourcePaths, _trends);
 
         IsLoaded = true;
 
         if (_ingredients.Count == 0)
-            Debug.LogWarning($"[DataManager] '{IngredientResourcePath}' 경로에 IngredientSO가 없습니다. Resources 폴더에 에셋을 생성해 주세요.");
+            Debug.LogWarning("[DataManager] IngredientSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Ingredient/LV1, LV2");
+
+        if (_mergeRecipes.Count == 0)
+            Debug.LogWarning("[DataManager] MergeRecipeSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Recipe");
+
+        if (_trends.Count == 0)
+            Debug.LogWarning("[DataManager] TrendSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Trends");
     }
 
     public IngredientSO GetIngredientByName(string ingredientName)
@@ -87,5 +114,16 @@ public class DataManager : MonoBehaviour
     public IEnumerable<IngredientSO> GetIngredientsByType(IngredientType type)
     {
         return _ingredients.Where(ingredient => ingredient != null && ingredient.type == type);
+    }
+
+    public IngredientSO[] GetStarterIngredients()
+    {
+        IngredientSO[] critical = GetCriticalIngredients().ToArray();
+        if (critical.Length > 0)
+            return critical;
+
+        return _ingredients
+            .Where(ingredient => ingredient != null && ingredient.buyPrice > 0)
+            .ToArray();
     }
 }

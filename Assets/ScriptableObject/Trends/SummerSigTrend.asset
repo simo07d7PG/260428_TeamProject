@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: adf665b28bfb02645ae50917d4b43c72, type: 3}
   m_Name: SummerSigTrend
   m_EditorClassIdentifier: Assembly-CSharp::TrendSO
-  trendName: "\uB514\uC800\uD2B8 \uC704\uD06C"
+  trendName: "\uC5EC\uB984 \uC2DC\uADF8\uB2C8\uCC98"
   durationDays: 2
-  multiplier: 1.7
+  multiplier: 1.4
   affectedIngredients:
   - {fileID: 11400000, guid: ff2f55df7f13a304181bad41fadd3e20, type: 2}
+  - {fileID: 11400000, guid: 99d3675a547167c488d58f19a084c8f6, type: 2}
