@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d47ea742caf46440977fe2146248d66, type: 3}
+  m_Name: RoastBlend
+  m_EditorClassIdentifier: Assembly-CSharp::MergeRecipeSO
+  inputIngredients:
+  - {fileID: 11400000, guid: 3228a5dbaf506b344ba341e8b4507477, type: 2}
+  - {fileID: 11400000, guid: 3228a5dbaf506b344ba341e8b4507477, type: 2}
+  outputIngredient: {fileID: 11400000, guid: 8f1d507e95edd054080b1345eef8eef9, type: 2}
+  outputLevel: 2
+  effectDescription: "\uC81C\uC791 \uC18D\uB3C4 +12%"
+  unlockDay: 1

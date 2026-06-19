@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 14a3490c58f25364ba533b8bea9ae896
+AssetOrigin:
+  serializedVersion: 1
+  productId: 356460
+  packageName: Pixel Art - Sushi Pack
+  packageVersion: 1.0
+  assetPath: Assets/karsiori/Pixel Art Sushi Pack/Small sauce bowl.png
+  uploadId: 849480
 TextureImporter:
   internalIDToNameTable:
   - first:
@@ -96,6 +103,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -141,10 +161,3 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 356460
-  packageName: Pixel Art - Sushi Pack
-  packageVersion: 1.0
-  assetPath: Assets/karsiori/Pixel Art Sushi Pack/Small sauce bowl.png
-  uploadId: 849480
