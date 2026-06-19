@@ -8,8 +8,10 @@ using UnityEngine.UI;
 /// </summary>
 public class SupplyUIController : MonoBehaviour
 {
-    [SerializeField] RectTransform panelRoot;
+    [SerializeField] RectTransform drawerRoot;
+    [SerializeField] RectTransform panelBody;
     [SerializeField] RectTransform listContentRoot;
+    [SerializeField] SupplyPanelDrawer panelDrawer;
     [SerializeField] TextMeshProUGUI coinText;
     [SerializeField] TextMeshProUGUI totalCostText;
     [SerializeField] TextMeshProUGUI statusText;
@@ -19,8 +21,22 @@ public class SupplyUIController : MonoBehaviour
     readonly Dictionary<IngredientSO, int> _orderQuantities = new();
     readonly List<SupplyOrderRowUI> _rows = new();
 
+    public static void ConfigureHostTransform(RectTransform host)
+    {
+        if (host == null)
+            return;
+
+        host.anchorMin = new Vector2(1f, 0.5f);
+        host.anchorMax = new Vector2(1f, 0.5f);
+        host.pivot = new Vector2(0.5f, 0.5f);
+        host.anchoredPosition = new Vector2(0f, 0f);
+        host.sizeDelta = Vector2.zero;
+        host.localScale = Vector3.one;
+    }
+
     void Awake()
     {
+        ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
         EnsurePanelReferences();
         BindConfirmButton();
@@ -55,14 +71,12 @@ public class SupplyUIController : MonoBehaviour
 
     void EnsurePanelReferences()
     {
-        if (panelRoot != null && listContentRoot != null)
-            return;
+        SupplyUIPanelFactory.SupplyPanelRefs refs = SupplyUIPanelFactory.EnsurePanel(transform);
 
-        Transform canvasRoot = transform.root;
-        SupplyUIPanelFactory.SupplyPanelRefs refs = SupplyUIPanelFactory.EnsurePanel(canvasRoot);
-
-        panelRoot = refs.panelRoot;
+        drawerRoot = refs.drawerRoot;
+        panelBody = refs.panelBody;
         listContentRoot = refs.listContentRoot;
+        panelDrawer = refs.drawer;
         coinText = refs.coinText;
         totalCostText = refs.totalCostText;
         statusText = refs.statusText;

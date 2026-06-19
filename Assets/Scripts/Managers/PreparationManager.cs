@@ -80,8 +80,9 @@ public class PreparationManager : MonoBehaviour
         if (canvas == null)
             return;
 
-        GameObject supplyUiHost = new GameObject("SupplyUI", typeof(SupplyUIController));
+        GameObject supplyUiHost = new GameObject("SupplyUI", typeof(RectTransform), typeof(SupplyUIController));
         supplyUiHost.transform.SetParent(canvas.transform, false);
+        SupplyUIController.ConfigureHostTransform(supplyUiHost.transform as RectTransform);
     }
 
     void BindSceneReferences()
