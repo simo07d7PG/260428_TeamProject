@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68c372f85e630e44396ae25c182ca53e, type: 3}
-  m_Name: RoastBlend
+  m_Name: WhippingCreamBase
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
-  ingredientName: "\uB85C\uC2A4\uD305 \uBE14\uB79C\uB4DC"
-  icon: {fileID: 0}
-  buyPrice: 0
+  ingredientName: "\uD718\uD551\uD06C\uB9BC \uBCA0\uC774\uC2A4"
+  icon: {fileID: -3356302069181093370, guid: b861926be7fc8a4488f421ff346f2f0e, type: 3}
+  buyPrice: 7
   isCritical: 0
-  type: 0
+  type: 3

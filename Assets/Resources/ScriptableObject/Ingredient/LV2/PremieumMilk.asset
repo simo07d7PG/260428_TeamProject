@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68c372f85e630e44396ae25c182ca53e, type: 3}
-  m_Name: WhippingCreamBase
+  m_Name: PremieumMilk
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
-  ingredientName: "\uD718\uD551\uD06C\uB9BC \uBCA0\uC774\uC2A4"
-  icon: {fileID: 0}
-  buyPrice: 7
+  ingredientName: "\uACE0\uAE09 \uC6B0\uC720"
+  icon: {fileID: -5110731548806032159, guid: e24c2678f127e7a40bd24f5dd12697fb, type: 3}
+  buyPrice: 0
   isCritical: 0
-  type: 3
+  type: 1

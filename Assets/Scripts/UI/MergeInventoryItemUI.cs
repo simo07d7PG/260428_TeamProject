@@ -26,8 +26,7 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
         if (iconImage == null)
             iconImage = GetComponent<Image>();
 
-        if (countText == null)
-            countText = transform.Find("Count")?.GetComponent<TextMeshProUGUI>();
+        countText = InventoryCountTextUtility.EnsureCountText(transform, countText);
     }
 
     public void Setup(IngredientSO ingredient, int level, int count)
@@ -45,7 +44,10 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
         }
 
         if (countText != null)
+        {
             countText.text = count.ToString();
+            countText.gameObject.SetActive(count > 0);
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -54,18 +56,22 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
             return;
 
         MergeDragContext.Begin(_ingredient, _level);
+
+        Sprite dragSprite = _ingredient != null ? _ingredient.icon : null;
+        if (dragSprite == null && iconImage != null)
+            dragSprite = iconImage.sprite;
+        Vector2 dragSize = ((RectTransform)transform).sizeDelta;
+        CanvasGroup canvasGroup = ManagerUtility.GetOrAddComponent<CanvasGroup>(gameObject);
+        MergeDragVisualizer.Begin(dragSprite, eventData, dragSize, canvasGroup);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
+        MergeDragVisualizer.UpdatePosition(eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!MergeDragContext.IsDragging)
-            return;
-
-        if (eventData.pointerEnter == null)
-            MergeDragContext.End();
+        MergeDragContext.EndIfDragging();
     }
 }

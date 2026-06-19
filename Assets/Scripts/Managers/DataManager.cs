@@ -3,32 +3,14 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.
-/// GameManager와 같은 오브젝트에 자동 장착됩니다.
+/// Resources/ScriptableObject의 ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.
+/// 씬의 Managers 오브젝트에 GameManager와 함께 배치합니다.
 /// </summary>
 [DefaultExecutionOrder(-90)]
 public class DataManager : MonoBehaviour
 {
     public static DataManager Instance { get; private set; }
 
-    // 에디터 실제 경로 (Assets/ScriptableObject/...)
-    static readonly string[] IngredientEditorPaths =
-    {
-        "Assets/ScriptableObject/Ingredient/LV1",
-        "Assets/ScriptableObject/Ingredient/LV2"
-    };
-
-    static readonly string[] MergeRecipeEditorPaths =
-    {
-        "Assets/ScriptableObject/Recipe"
-    };
-
-    static readonly string[] TrendEditorPaths =
-    {
-        "Assets/ScriptableObject/Trends"
-    };
-
-    // 빌드용 Resources 상대 경로 (Assets/Resources/... 와 동일 구조 필요)
     static readonly string[] IngredientResourcePaths =
     {
         "ScriptableObject/Ingredient/LV1",
@@ -79,20 +61,20 @@ public class DataManager : MonoBehaviour
         _mergeRecipes.Clear();
         _trends.Clear();
 
-        GameAssetLoader.LoadAll(IngredientEditorPaths, IngredientResourcePaths, _ingredients);
-        GameAssetLoader.LoadAll(MergeRecipeEditorPaths, MergeRecipeResourcePaths, _mergeRecipes);
-        GameAssetLoader.LoadAll(TrendEditorPaths, TrendResourcePaths, _trends);
+        GameAssetLoader.LoadAll(IngredientResourcePaths, _ingredients);
+        GameAssetLoader.LoadAll(MergeRecipeResourcePaths, _mergeRecipes);
+        GameAssetLoader.LoadAll(TrendResourcePaths, _trends);
 
         IsLoaded = true;
 
         if (_ingredients.Count == 0)
-            Debug.LogWarning("[DataManager] IngredientSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Ingredient/LV1, LV2");
+            Debug.LogWarning("[DataManager] IngredientSO를 찾지 못했습니다. 경로: Resources/ScriptableObject/Ingredient/LV1, LV2");
 
         if (_mergeRecipes.Count == 0)
-            Debug.LogWarning("[DataManager] MergeRecipeSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Recipe");
+            Debug.LogWarning("[DataManager] MergeRecipeSO를 찾지 못했습니다. 경로: Resources/ScriptableObject/Recipe");
 
         if (_trends.Count == 0)
-            Debug.LogWarning("[DataManager] TrendSO를 찾지 못했습니다. 경로: Assets/ScriptableObject/Trends");
+            Debug.LogWarning("[DataManager] TrendSO를 찾지 못했습니다. 경로: Resources/ScriptableObject/Trends");
     }
 
     public IngredientSO GetIngredientByName(string ingredientName)
@@ -125,5 +107,13 @@ public class DataManager : MonoBehaviour
         return _ingredients
             .Where(ingredient => ingredient != null && ingredient.buyPrice > 0)
             .ToArray();
+    }
+
+    public IEnumerable<IngredientSO> GetOrderableIngredients()
+    {
+        return _ingredients
+            .Where(ingredient => ingredient != null && ingredient.buyPrice > 0)
+            .OrderBy(ingredient => ingredient.isCritical ? 0 : 1)
+            .ThenBy(ingredient => ingredient.ingredientName);
     }
 }

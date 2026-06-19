@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68c372f85e630e44396ae25c182ca53e, type: 3}
-  m_Name: CoffeeBean
+  m_Name: BreadBase
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
-  ingredientName: "\uCEE4\uD53C \uC6D0\uB450"
-  icon: {fileID: 0}
-  buyPrice: 12
-  isCritical: 1
-  type: 0
+  ingredientName: "\uBE75 \uBCA0\uC774\uC2A4"
+  icon: {fileID: 7727380461765456335, guid: 9ef468d0543b9b541a94bc1e5563816c, type: 3}
+  buyPrice: 5
+  isCritical: 0
+  type: 4

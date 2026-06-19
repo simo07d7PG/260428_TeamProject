@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: FruitMix
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
   ingredientName: "\uACFC\uC77C \uBBF9\uC2A4"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 30dbba13bd27c3044922e8f249e3722d, type: 3}
   buyPrice: 9
   isCritical: 0
   type: 3

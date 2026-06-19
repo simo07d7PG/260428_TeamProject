@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68c372f85e630e44396ae25c182ca53e, type: 3}
-  m_Name: DecoCream
+  m_Name: RoastBlend
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
-  ingredientName: "\uB370\uCF54 \uD06C\uB9BC"
-  icon: {fileID: 0}
+  ingredientName: "\uB85C\uC2A4\uD305 \uBE14\uB79C\uB4DC"
+  icon: {fileID: -4996790901853812474, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
   buyPrice: 0
   isCritical: 0
-  type: 3
+  type: 0

@@ -20,9 +20,23 @@ public static class MergeDragContext
 
     public static void End()
     {
+        MergeDragVisualizer.End();
+
         Ingredient = null;
         Level = 1;
         SourceSlotIndex = -1;
         IsDragging = false;
+    }
+
+    /// <summary>
+    /// OnEndDrag에서 호출합니다. 유효한 드롭 대상이 없을 때 고스트/UI 상태를 정리합니다.
+    /// OnDrop이 먼저 성공하면 IsDragging이 false이므로 중복 정리되지 않습니다.
+    /// </summary>
+    public static void EndIfDragging()
+    {
+        if (!IsDragging)
+            return;
+
+        End();
     }
 }

@@ -7,6 +7,7 @@ using UnityEngine;
 /// 준비 단계의 Merge 그리드, 인벤토리, 폐기 비용을 관리하는 싱글톤 매니저입니다.
 /// UI는 씬에 직접 배치하고 Inspector에서 연결합니다.
 /// </summary>
+[DefaultExecutionOrder(-10)]
 public class PreparationManager : MonoBehaviour
 {
     public const int GridSize = 9;
@@ -50,16 +51,37 @@ public class PreparationManager : MonoBehaviour
         }
 
         Instance = this;
+        EnsureSupplySystem();
         BindSceneReferences();
         AutoLoadConfiguration();
         ClearGrid();
         InitializeStarterInventory();
     }
 
+    void Start()
+    {
+        RefreshInventoryUI();
+    }
+
     void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
+    }
+
+    void EnsureSupplySystem()
+    {
+        ManagerUtility.GetOrAddComponent<SupplyManager>(gameObject);
+
+        if (FindAnyObjectByType<SupplyUIController>() != null)
+            return;
+
+        Canvas canvas = FindAnyObjectByType<Canvas>();
+        if (canvas == null)
+            return;
+
+        GameObject supplyUiHost = new GameObject("SupplyUI", typeof(SupplyUIController));
+        supplyUiHost.transform.SetParent(canvas.transform, false);
     }
 
     void BindSceneReferences()
@@ -79,13 +101,27 @@ public class PreparationManager : MonoBehaviour
 
     void AutoLoadConfiguration()
     {
-        if (starterIngredients != null && starterIngredients.Length > 0)
+        if (HasValidStarterIngredients(starterIngredients))
             return;
 
         if (DataManager.Instance == null || !DataManager.Instance.IsLoaded)
             return;
 
         starterIngredients = DataManager.Instance.GetStarterIngredients();
+    }
+
+    static bool HasValidStarterIngredients(IngredientSO[] ingredients)
+    {
+        if (ingredients == null || ingredients.Length == 0)
+            return false;
+
+        foreach (IngredientSO ingredient in ingredients)
+        {
+            if (ingredient != null)
+                return true;
+        }
+
+        return false;
     }
 
     void ClearGrid()
@@ -96,8 +132,16 @@ public class PreparationManager : MonoBehaviour
 
     void InitializeStarterInventory()
     {
-        if (starterIngredients == null || starterIngredients.Length == 0)
+        if (!HasValidStarterIngredients(starterIngredients))
+        {
+            AutoLoadConfiguration();
+        }
+
+        if (!HasValidStarterIngredients(starterIngredients))
+        {
+            Debug.LogWarning("[PreparationManager] starterIngredients가 비어 있습니다. PrepSystem Inspector 또는 DataManager SO를 확인해 주세요.");
             return;
+        }
 
         foreach (IngredientSO ingredient in starterIngredients)
         {
@@ -106,6 +150,14 @@ public class PreparationManager : MonoBehaviour
 
             AddToInventory(ingredient, 1, starterCountPerIngredient);
         }
+    }
+
+    void RefreshInventoryUI()
+    {
+        if (mergeUIController == null)
+            mergeUIController = FindAnyObjectByType<MergeUIController>();
+
+        mergeUIController?.RefreshAll();
     }
 
     public MergeGridItem GetSlot(int index)
@@ -169,6 +221,17 @@ public class PreparationManager : MonoBehaviour
         ClearSelection();
         OnGridChanged?.Invoke();
         OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    public bool TryDisposeGarbage(int slotIndex)
+    {
+        if (!IsValidSlot(slotIndex) || !_grid[slotIndex].isGarbage)
+            return false;
+
+        _grid[slotIndex] = MergeGridItem.Empty;
+        ClearSelection();
+        OnGridChanged?.Invoke();
         return true;
     }
 
@@ -309,6 +372,7 @@ public class PreparationManager : MonoBehaviour
         _advancedInventory.Clear();
         _garbageDisposalCost = 0;
         InitializeStarterInventory();
+        SupplyManager.Instance?.ResetDailyOrder();
         OnGridChanged?.Invoke();
         OnInventoryChanged?.Invoke();
         OnDisposalCostChanged?.Invoke(_garbageDisposalCost);

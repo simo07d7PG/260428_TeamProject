@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68c372f85e630e44396ae25c182ca53e, type: 3}
-  m_Name: SyrupBase
+  m_Name: CoffeeBean
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
-  ingredientName: "\uC2DC\uB7FD \uBCA0\uC774\uC2A4"
-  icon: {fileID: 0}
-  buyPrice: 6
-  isCritical: 0
-  type: 2
+  ingredientName: "\uCEE4\uD53C \uC6D0\uB450"
+  icon: {fileID: -4996790901853812474, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
+  buyPrice: 12
+  isCritical: 1
+  type: 0

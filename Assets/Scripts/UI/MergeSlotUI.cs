@@ -77,19 +77,23 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             return;
 
         MergeDragContext.Begin(item.ingredient, item.level, slotIndex);
+
+        Sprite dragSprite = iconImage != null ? iconImage.sprite : null;
+        Vector2 dragSize = iconImage != null
+            ? ((RectTransform)iconImage.transform).sizeDelta
+            : ((RectTransform)transform).sizeDelta;
+        CanvasGroup canvasGroup = ManagerUtility.GetOrAddComponent<CanvasGroup>(gameObject);
+        MergeDragVisualizer.Begin(dragSprite, eventData, dragSize, canvasGroup);
     }
 
     public void OnDrag(PointerEventData eventData)
     {
+        MergeDragVisualizer.UpdatePosition(eventData);
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        if (!MergeDragContext.IsDragging)
-            return;
-
-        if (eventData.pointerEnter == null)
-            MergeDragContext.End();
+        MergeDragContext.EndIfDragging();
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -118,7 +122,12 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (eventData.button == PointerEventData.InputButton.Right)
         {
-            PreparationManager.Instance.TryRemoveToInventory(slotIndex);
+            MergeGridItem item = PreparationManager.Instance.GetSlot(slotIndex);
+            if (item.isGarbage)
+                PreparationManager.Instance.TryDisposeGarbage(slotIndex);
+            else
+                PreparationManager.Instance.TryRemoveToInventory(slotIndex);
+
             return;
         }
 

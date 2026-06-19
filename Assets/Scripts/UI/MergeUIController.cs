@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// Merge UI 전체를 갱신하고 결과/폐기 비용 피드백을 표시합니다.
@@ -17,9 +18,25 @@ public class MergeUIController : MonoBehaviour
 
     float _feedbackTimer;
 
+    const float InventoryItemSize = 80f;
+
     void Awake()
     {
+        ResolveReferences();
+        basicInventoryRoot = InventoryScrollUtility.EnsureSetup(basicInventoryRoot, InventoryItemSize, 8f);
+        advancedInventoryRoot = InventoryScrollUtility.EnsureSetup(advancedInventoryRoot, InventoryItemSize, 8f);
         ValidateReferences();
+    }
+
+    void ResolveReferences()
+    {
+        Transform canvasRoot = transform.root;
+
+        if (basicInventoryRoot == null)
+            basicInventoryRoot = ManagerUtility.FindDeepChild(canvasRoot, "BasicInvPanel");
+
+        if (advancedInventoryRoot == null)
+            advancedInventoryRoot = ManagerUtility.FindDeepChild(canvasRoot, "AdvancedInvPanel");
     }
 
     void ValidateReferences()
@@ -35,6 +52,17 @@ public class MergeUIController : MonoBehaviour
 
         if (disposalCostText == null)
             Debug.LogError("[MergeUIController] Disposal Cost Text가 연결되지 않았습니다.");
+    }
+
+    void Start()
+    {
+        RefreshAll();
+    }
+
+    public void RefreshAll()
+    {
+        RefreshInventory();
+        RefreshDisposalCost(PreparationManager.Instance != null ? PreparationManager.Instance.GarbageDisposalCost : 0);
     }
 
     void OnEnable()
@@ -73,7 +101,10 @@ public class MergeUIController : MonoBehaviour
     void RefreshInventory()
     {
         if (PreparationManager.Instance == null)
+        {
+            Debug.LogWarning("[MergeUIController] PreparationManager가 아직 없어 인벤토리를 갱신하지 못했습니다.");
             return;
+        }
 
         RebuildInventory(
             basicInventoryRoot,
@@ -94,9 +125,23 @@ public class MergeUIController : MonoBehaviour
 
         foreach (InventoryViewData item in items)
         {
-            MergeInventoryItemUI view = Instantiate(inventoryItemPrefab, root);
+            MergeInventoryItemUI view = Instantiate(inventoryItemPrefab.gameObject, root)
+                .GetComponent<MergeInventoryItemUI>();
+            ConfigureInventoryItemLayout(view);
             view.Setup(item.ingredient, item.level, item.count);
         }
+    }
+
+    static void ConfigureInventoryItemLayout(MergeInventoryItemUI view)
+    {
+        if (view == null)
+            return;
+
+        LayoutElement layoutElement = ManagerUtility.GetOrAddComponent<LayoutElement>(view.gameObject);
+        layoutElement.preferredWidth = InventoryItemSize;
+        layoutElement.preferredHeight = InventoryItemSize;
+        layoutElement.flexibleWidth = 0f;
+        layoutElement.flexibleHeight = 0f;
     }
 
     static List<InventoryViewData> ConvertBasicInventory(IReadOnlyDictionary<IngredientSO, int> inventory)
