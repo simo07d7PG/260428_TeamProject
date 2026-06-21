@@ -131,7 +131,10 @@ public class ClosingUIController : MonoBehaviour
             return;
 
         if (_titleText != null)
-            _titleText.text = UIFontUtility.Sanitize($"Day {settlement.Day} 정산");
+        {
+            string grade = string.IsNullOrEmpty(settlement.Grade) ? string.Empty : $" - {settlement.Grade}";
+            _titleText.text = UIFontUtility.Sanitize($"Day {settlement.Day} 정산{grade}");
+        }
 
         StringBuilder builder = new StringBuilder();
         builder.AppendLine($"총 매출:        {settlement.Revenue} Coin");

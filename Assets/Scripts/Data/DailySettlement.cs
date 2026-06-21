@@ -13,6 +13,7 @@ public class DailySettlement
     public int LeftCount;
     public int MergeCount;
     public int CoinAfter;
+    public string Grade = string.Empty;
     public readonly List<string> UpcomingUnlocks = new();
     public string UpcomingTrendName = string.Empty;
 

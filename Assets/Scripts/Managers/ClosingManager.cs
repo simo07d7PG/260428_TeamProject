@@ -89,6 +89,7 @@ public class ClosingManager : MonoBehaviour
                 : string.Empty
         };
 
+        settlement.Grade = ComputeGrade(settlement);
         CollectUpcomingUnlocks(settlement, day + 1);
 
         LastSettlement = settlement;
@@ -96,6 +97,20 @@ public class ClosingManager : MonoBehaviour
             CustomerManager.Instance != null ? CustomerManager.Instance.ServedCount : 0);
 
         OnSettlementReady?.Invoke(settlement);
+    }
+
+    static string ComputeGrade(DailySettlement settlement)
+    {
+        int target = CustomerManager.Instance != null ? CustomerManager.Instance.CustomersPerDay : 8;
+        float servedRatio = target > 0 ? settlement.ServedCount / (float)target : 0f;
+
+        if (servedRatio >= 0.85f && settlement.NetProfit > 0)
+            return "최고의 하루!";
+        if (servedRatio >= 0.6f && settlement.NetProfit >= 0)
+            return "좋은 하루";
+        if (servedRatio >= 0.35f)
+            return "무난한 하루";
+        return "아쉬운 하루";
     }
 
     static void CollectUpcomingUnlocks(DailySettlement settlement, int nextDay)
