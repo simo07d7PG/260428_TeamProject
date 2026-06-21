@@ -59,7 +59,10 @@ public class FeedbackUIController : MonoBehaviour
         if (PreparationManager.Instance != null)
             PreparationManager.Instance.OnMergeCompleted += HandleMerge;
         if (BeverageBuildManager.Instance != null)
+        {
             BeverageBuildManager.Instance.OnBuildCompleted += HandleDrinkComplete;
+            BeverageBuildManager.Instance.OnShotPulled += HandleShotPulled;
+        }
 
         _subscribed = ServiceManager.Instance != null
             || PreparationManager.Instance != null
@@ -76,7 +79,10 @@ public class FeedbackUIController : MonoBehaviour
         if (PreparationManager.Instance != null)
             PreparationManager.Instance.OnMergeCompleted -= HandleMerge;
         if (BeverageBuildManager.Instance != null)
+        {
             BeverageBuildManager.Instance.OnBuildCompleted -= HandleDrinkComplete;
+            BeverageBuildManager.Instance.OnShotPulled -= HandleShotPulled;
+        }
 
         _subscribed = false;
     }
@@ -106,6 +112,53 @@ public class FeedbackUIController : MonoBehaviour
     void HandleDrinkComplete(BeverageBuildSnapshot snapshot)
     {
         SpawnBurst(new Vector2(0f, 40f), new Color(0.6f, 0.85f, 1f), 8);
+    }
+
+    void HandleShotPulled()
+    {
+        SpawnSteam(new Vector2(0f, 90f), 4);
+    }
+
+    void SpawnSteam(Vector2 anchoredPos, int count)
+    {
+        if (_overlay == null)
+            return;
+
+        for (int i = 0; i < count; i++)
+        {
+            Image wisp = UIFactoryUtility.CreateImage(_overlay, "Steam", new Color(1f, 1f, 1f, 0.5f));
+            wisp.raycastTarget = false;
+
+            RectTransform rect = wisp.rectTransform;
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = anchoredPos + new Vector2(Random.Range(-22f, 22f), Random.Range(-6f, 6f));
+            rect.sizeDelta = new Vector2(14f, 14f);
+
+            StartCoroutine(RiseSteam(wisp, rect, Random.Range(-14f, 14f)));
+        }
+    }
+
+    System.Collections.IEnumerator RiseSteam(Image wisp, RectTransform rect, float drift)
+    {
+        float duration = Random.Range(0.9f, 1.3f);
+        float t = 0f;
+        Vector2 start = rect.anchoredPosition;
+        Color baseColor = wisp.color;
+
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            rect.anchoredPosition = start + new Vector2(drift * k, 120f * k);
+            wisp.color = new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * (1f - k));
+            rect.localScale = Vector3.one * (1f + 1.2f * k);
+            yield return null;
+        }
+
+        if (wisp != null)
+            Destroy(wisp.gameObject);
     }
 
     // --- 스폰 ---

@@ -55,7 +55,11 @@ public class ShotPullInteraction : MonoBehaviour, IPointerDownHandler, IPointerU
             return;
 
         float elapsed = Time.unscaledTime - _holdStart;
-        station?.SetGauge(gaugeFullSeconds > 0f ? elapsed / gaugeFullSeconds : 0f);
+        float fill = gaugeFullSeconds > 0f ? elapsed / gaugeFullSeconds : 0f;
+        bool sweetSpot = BeverageBuildManager.Instance != null
+            && elapsed >= BeverageBuildManager.Instance.ShotIdealMin
+            && elapsed <= BeverageBuildManager.Instance.ShotIdealMax;
+        station?.SetGauge(fill, sweetSpot);
     }
 
     void OnDisable()

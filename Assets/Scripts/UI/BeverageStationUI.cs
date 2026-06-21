@@ -30,6 +30,9 @@ public class BeverageStationUI : MonoBehaviour
         SetGauge(0f);
     }
 
+    static readonly Color GaugeNormal = new(0.30f, 0.55f, 0.85f, 0.45f);
+    static readonly Color GaugeSweet = new(0.35f, 0.82f, 0.45f, 0.6f);
+
     public void SetGauge(float normalized)
     {
         if (gaugeFill == null)
@@ -37,6 +40,14 @@ public class BeverageStationUI : MonoBehaviour
 
         gaugeFill.fillAmount = Mathf.Clamp01(normalized);
         gaugeFill.enabled = normalized > 0.001f;
+    }
+
+    /// <summary>게이지 채움 + 최적 구간(sweetSpot)이면 초록 강조. 샷 타이밍 가이드용.</summary>
+    public void SetGauge(float normalized, bool sweetSpot)
+    {
+        SetGauge(normalized);
+        if (gaugeFill != null)
+            gaugeFill.color = sweetSpot ? GaugeSweet : GaugeNormal;
     }
 
     public void SetLabel(string text)

@@ -34,9 +34,12 @@ public class BeverageBuildManager : MonoBehaviour
     public bool IsPreview => _buildActive && _currentOrder == null;
     public CustomerOrder CurrentOrder => _currentOrder;
     public string LastMessage => _lastMessage;
+    public float ShotIdealMin => shotIdealMin;
+    public float ShotIdealMax => shotIdealMax;
 
     public event Action OnBuildStateChanged;
     public event Action<BeverageBuildSnapshot> OnBuildCompleted;
+    public event Action OnShotPulled;
 
     void Awake()
     {
@@ -121,6 +124,7 @@ public class BeverageBuildManager : MonoBehaviour
         layer.amount = Mathf.Clamp01(blended);
 
         message = ShotQualityLabel(quality);
+        OnShotPulled?.Invoke();
         AfterChange();
         return true;
     }
