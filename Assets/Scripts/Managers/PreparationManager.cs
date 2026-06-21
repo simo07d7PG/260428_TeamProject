@@ -110,6 +110,7 @@ public class PreparationManager : MonoBehaviour
         EnsureUIHost<DayFlowUIController>(canvas, "DayFlowUI", DayFlowUIController.ConfigureHostTransform);
         EnsureUIHost<TrendBannerUIController>(canvas, "TrendBannerUI", TrendBannerUIController.ConfigureHostTransform);
         EnsureUIHost<ClosingUIController>(canvas, "ClosingUI", ClosingUIController.ConfigureHostTransform);
+        EnsureUIHost<FeedbackUIController>(canvas, "FeedbackUI", FeedbackUIController.ConfigureHostTransform);
     }
 
     static void EnsureUIHost<T>(Canvas canvas, string hostName, Action<RectTransform> configure)
