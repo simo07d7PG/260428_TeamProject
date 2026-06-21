@@ -45,10 +45,16 @@ public class SupplyOrderRowUI : MonoBehaviour
         _onQuantityChanged = onQuantityChanged;
 
         if (nameText != null)
-            nameText.text = ingredient != null ? ingredient.ingredientName : "-";
+        {
+            nameText.text = UIFontUtility.Sanitize(ingredient != null ? ingredient.ingredientName : "-");
+            UIFontUtility.Apply(nameText);
+        }
 
         if (priceText != null)
-            priceText.text = ingredient != null ? $"{ingredient.buyPrice} Coin" : "-";
+        {
+            priceText.text = UIFontUtility.Sanitize(ingredient != null ? $"{ingredient.buyPrice} Coin" : "-");
+            UIFontUtility.Apply(priceText);
+        }
 
         if (decreaseButton != null)
         {

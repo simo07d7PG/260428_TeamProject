@@ -39,6 +39,7 @@ public class SupplyUIController : MonoBehaviour
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
         EnsurePanelReferences();
+        UIFontUtility.ApplyToHierarchy(transform.root);
         BindConfirmButton();
         BuildOrderList();
     }
@@ -140,13 +141,13 @@ public class SupplyUIController : MonoBehaviour
         if (!SupplyManager.Instance.TrySubmitOrder(order, out string errorMessage))
         {
             if (statusText != null)
-                statusText.text = errorMessage;
+                statusText.text = UIFontUtility.Sanitize(errorMessage);
             return;
         }
 
         ResetOrderQuantities();
         if (statusText != null)
-            statusText.text = "발주가 완료되었습니다.";
+            statusText.text = UIFontUtility.Sanitize("발주가 완료되었습니다.");
 
         RefreshAll();
     }
@@ -186,12 +187,12 @@ public class SupplyUIController : MonoBehaviour
     void RefreshSummary()
     {
         if (coinText != null && GameManager.Instance != null)
-            coinText.text = $"보유 코인: {GameManager.Instance.Coin}";
+            coinText.text = UIFontUtility.Sanitize($"보유 코인: {GameManager.Instance.Coin}");
 
         if (totalCostText != null && SupplyManager.Instance != null)
         {
             int totalCost = SupplyManager.Instance.CalculateOrderCost(BuildActiveOrder());
-            totalCostText.text = $"발주 합계: {totalCost} Coin";
+            totalCostText.text = UIFontUtility.Sanitize($"발주 합계: {totalCost} Coin");
         }
     }
 
@@ -214,7 +215,8 @@ public class SupplyUIController : MonoBehaviour
                 names.Add(ingredient.ingredientName);
         }
 
-        criticalWarningText.text = $"필수 재료 부족: {string.Join(", ", names)}\n해당 재료가 필요한 메뉴는 제작할 수 없습니다.";
+        criticalWarningText.text = UIFontUtility.Sanitize(
+            $"필수 재료 부족: {string.Join(", ", names)}\n해당 재료가 필요한 메뉴는 제작할 수 없습니다.");
     }
 
     void RefreshInteractable()

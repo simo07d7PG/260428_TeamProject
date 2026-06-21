@@ -25,6 +25,7 @@ public class MergeUIController : MonoBehaviour
         ResolveReferences();
         basicInventoryRoot = InventoryScrollUtility.EnsureSetup(basicInventoryRoot, InventoryItemSize, 8f);
         advancedInventoryRoot = InventoryScrollUtility.EnsureSetup(advancedInventoryRoot, InventoryItemSize, 8f);
+        UIFontUtility.ApplyToHierarchy(transform.root);
         ValidateReferences();
     }
 
@@ -195,7 +196,7 @@ public class MergeUIController : MonoBehaviour
     void RefreshDisposalCost(int cost)
     {
         if (disposalCostText != null)
-            disposalCostText.text = $"쓰레기 폐기 비용: {cost} Coin";
+            disposalCostText.text = UIFontUtility.Sanitize($"쓰레기 폐기 비용: {cost} Coin");
     }
 
     void ShowMergeResult(MergeResult result)
@@ -207,7 +208,7 @@ public class MergeUIController : MonoBehaviour
         }
 
         feedbackText.gameObject.SetActive(true);
-        feedbackText.text = result.message;
+        feedbackText.text = UIFontUtility.Sanitize(result.message);
         _feedbackTimer = feedbackDuration;
     }
 

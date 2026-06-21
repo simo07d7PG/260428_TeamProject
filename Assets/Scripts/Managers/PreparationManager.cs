@@ -52,6 +52,7 @@ public class PreparationManager : MonoBehaviour
 
         Instance = this;
         EnsureSupplySystem();
+        EnsureServiceSystem();
         BindSceneReferences();
         AutoLoadConfiguration();
         ClearGrid();
@@ -83,6 +84,41 @@ public class PreparationManager : MonoBehaviour
         GameObject supplyUiHost = new GameObject("SupplyUI", typeof(RectTransform), typeof(SupplyUIController));
         supplyUiHost.transform.SetParent(canvas.transform, false);
         SupplyUIController.ConfigureHostTransform(supplyUiHost.transform as RectTransform);
+    }
+
+    /// <summary>
+    /// Phase 5-R: GPGP식 음료 제작 시스템(BeverageBuildManager + 컵 캔버스 UI)을 보장합니다.
+    /// 구 클릭식 제작 시스템(CraftingManager/CraftingUIController)은 더 이상 생성하지 않습니다.
+    /// </summary>
+    void EnsureServiceSystem()
+    {
+        ManagerUtility.GetOrAddComponent<BeverageBuildManager>(gameObject);
+        ManagerUtility.GetOrAddComponent<AudioManager>(gameObject);
+
+        CraftingUIController legacyCrafting = FindAnyObjectByType<CraftingUIController>();
+        if (legacyCrafting != null)
+            legacyCrafting.gameObject.SetActive(false);
+
+        Canvas canvas = FindAnyObjectByType<Canvas>();
+        if (canvas == null)
+            return;
+
+        EnsureUIHost<BeverageServiceUIController>(canvas, "BeverageUI", BeverageServiceUIController.ConfigureHostTransform);
+        EnsureUIHost<CustomerQueueUIController>(canvas, "CustomerQueueUI", CustomerQueueUIController.ConfigureHostTransform);
+        EnsureUIHost<DayFlowUIController>(canvas, "DayFlowUI", DayFlowUIController.ConfigureHostTransform);
+        EnsureUIHost<TrendBannerUIController>(canvas, "TrendBannerUI", TrendBannerUIController.ConfigureHostTransform);
+        EnsureUIHost<ClosingUIController>(canvas, "ClosingUI", ClosingUIController.ConfigureHostTransform);
+    }
+
+    static void EnsureUIHost<T>(Canvas canvas, string hostName, Action<RectTransform> configure)
+        where T : MonoBehaviour
+    {
+        if (FindAnyObjectByType<T>() != null)
+            return;
+
+        GameObject host = new GameObject(hostName, typeof(RectTransform), typeof(T));
+        host.transform.SetParent(canvas.transform, false);
+        configure?.Invoke(host.transform as RectTransform);
     }
 
     void BindSceneReferences()
@@ -374,6 +410,7 @@ public class PreparationManager : MonoBehaviour
         _garbageDisposalCost = 0;
         InitializeStarterInventory();
         SupplyManager.Instance?.ResetDailyOrder();
+        BeverageBuildManager.Instance?.ResetSession();
         OnGridChanged?.Invoke();
         OnInventoryChanged?.Invoke();
         OnDisposalCostChanged?.Invoke(_garbageDisposalCost);

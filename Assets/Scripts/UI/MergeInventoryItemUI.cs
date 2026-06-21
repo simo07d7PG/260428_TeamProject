@@ -46,6 +46,7 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
         if (countText != null)
         {
             countText.text = count.ToString();
+            UIFontUtility.Apply(countText);
             countText.gameObject.SetActive(count > 0);
         }
     }

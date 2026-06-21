@@ -7,8 +7,6 @@ using UnityEngine;
 public static class InventoryCountTextUtility
 {
     const string CountChildName = "Count";
-    const string FontResourcePath = "Fonts/Pretendard-Medium SDF";
-
     public static TextMeshProUGUI EnsureCountText(Transform itemRoot, TextMeshProUGUI existing)
     {
         TextMeshProUGUI countText = existing;
@@ -41,10 +39,7 @@ public static class InventoryCountTextUtility
         countRect.anchoredPosition = new Vector2(-2f, 2f);
         countRect.sizeDelta = new Vector2(34f, 24f);
 
-        TMP_FontAsset font = Resources.Load<TMP_FontAsset>(FontResourcePath);
-        if (font != null)
-            countText.font = font;
-
+        UIFontUtility.Apply(countText);
         countText.fontSize = 16f;
         countText.fontStyle = FontStyles.Bold;
         countText.alignment = TextAlignmentOptions.BottomRight;

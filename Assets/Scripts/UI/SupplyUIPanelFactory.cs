@@ -7,7 +7,6 @@ using UnityEngine.UI;
 /// </summary>
 public static class SupplyUIPanelFactory
 {
-    const string FontResourcePath = "Fonts/Pretendard-Medium SDF";
     const string PanelName = "SupplyPanel";
     const string ListContentName = "OrderListContent";
     const string PanelBodyName = "PanelBody";
@@ -518,11 +517,8 @@ public static class SupplyUIPanelFactory
         labelRect.sizeDelta = size;
 
         TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
-        TMP_FontAsset font = Resources.Load<TMP_FontAsset>(FontResourcePath);
-        if (font != null)
-            label.font = font;
-
-        label.text = text;
+        label.text = UIFontUtility.Sanitize(text);
+        UIFontUtility.Apply(label);
         label.fontSize = fontSize;
         label.color = Color.white;
         label.raycastTarget = false;

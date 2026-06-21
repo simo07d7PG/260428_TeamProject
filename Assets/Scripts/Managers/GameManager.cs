@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -9,9 +10,16 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public GameState CurrentState { get; set; } = GameState.Preparation;
+    [Header("게임 진행")]
+    public GameState CurrentState = GameState.Preparation;
     public int CurrentDay = 1;
     public int Coin;
+
+    [Header("저장")]
+    [Tooltip("켜면 시작 시 저장 파일을 불러옵니다. (개발 중에는 꺼 두면 Inspector 값 유지)")]
+    [SerializeField] bool loadOnStart;
+
+    public event Action<GameState> OnStateChanged;
 
     void Awake()
     {
@@ -24,6 +32,14 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         ValidateComponents();
+
+        if (loadOnStart)
+            SaveLoadUtility.LoadInto(this);
+    }
+
+    void OnApplicationQuit()
+    {
+        SaveLoadUtility.Save(this);
     }
 
     void OnDestroy()
@@ -43,6 +59,24 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void SetState(GameState newState)
     {
+        if (CurrentState == newState)
+            return;
+
         CurrentState = newState;
+        OnStateChanged?.Invoke(CurrentState);
+    }
+
+    /// <summary>준비 → 영업으로 전환합니다.</summary>
+    public void StartService()
+    {
+        if (CurrentState == GameState.Preparation)
+            SetState(GameState.Service);
+    }
+
+    /// <summary>영업 → 정산으로 전환합니다.</summary>
+    public void EndService()
+    {
+        if (CurrentState == GameState.Service)
+            SetState(GameState.Closing);
     }
 }

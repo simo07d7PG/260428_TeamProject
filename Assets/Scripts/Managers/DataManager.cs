@@ -27,13 +27,22 @@ public class DataManager : MonoBehaviour
         "ScriptableObject/Trends"
     };
 
+    static readonly string[] MenuRecipeResourcePaths =
+    {
+        "ScriptableObject/Menu"
+    };
+
     readonly List<IngredientSO> _ingredients = new();
     readonly List<MergeRecipeSO> _mergeRecipes = new();
     readonly List<TrendSO> _trends = new();
+    readonly List<MenuRecipeSO> _menus = new();
 
     public IReadOnlyList<IngredientSO> Ingredients => _ingredients;
     public IReadOnlyList<MergeRecipeSO> MergeRecipes => _mergeRecipes;
     public IReadOnlyList<TrendSO> Trends => _trends;
+
+    /// <summary>MenuRecipeSO 에셋(선택). 없으면 MenuCatalog의 하드코드 폴백이 사용됩니다.</summary>
+    public IReadOnlyList<MenuRecipeSO> Menus => _menus;
 
     public bool IsLoaded { get; private set; }
 
@@ -60,10 +69,12 @@ public class DataManager : MonoBehaviour
         _ingredients.Clear();
         _mergeRecipes.Clear();
         _trends.Clear();
+        _menus.Clear();
 
         GameAssetLoader.LoadAll(IngredientResourcePaths, _ingredients);
         GameAssetLoader.LoadAll(MergeRecipeResourcePaths, _mergeRecipes);
         GameAssetLoader.LoadAll(TrendResourcePaths, _trends);
+        GameAssetLoader.LoadAll(MenuRecipeResourcePaths, _menus);
 
         IsLoaded = true;
 
