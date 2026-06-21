@@ -63,6 +63,9 @@ public class ClosingManager : MonoBehaviour
 
         _settledDay = day;
 
+        // 타이머 만료로 남은 손님이 있으면 노쇼로 마감해 정산 카운트를 맞춘다.
+        CustomerManager.Instance?.FinalizeNoShows();
+
         int revenue = ServiceManager.Instance != null ? ServiceManager.Instance.TotalRevenue : 0;
         int garbage = PreparationManager.Instance != null ? PreparationManager.Instance.GarbageDisposalCost : 0;
         int leftover = SupplyManager.Instance != null
@@ -79,6 +82,7 @@ public class ClosingManager : MonoBehaviour
             LeftoverCost = leftover,
             ServedCount = CustomerManager.Instance != null ? CustomerManager.Instance.ServedCount : 0,
             LeftCount = CustomerManager.Instance != null ? CustomerManager.Instance.LeftCount : 0,
+            MergeCount = PreparationManager.Instance != null ? PreparationManager.Instance.DailyMergeCount : 0,
             CoinAfter = GameManager.Instance.Coin,
             UpcomingTrendName = TrendManager.Instance != null && TrendManager.Instance.UpcomingTrend != null
                 ? TrendManager.Instance.UpcomingTrend.trendName

@@ -142,6 +142,7 @@ public class ClosingUIController : MonoBehaviour
         builder.AppendLine($"보유 코인:      {settlement.CoinAfter} Coin");
         builder.AppendLine();
         builder.AppendLine($"서빙 완료: {settlement.ServedCount}명 / 떠난 손님: {settlement.LeftCount}명");
+        builder.AppendLine($"머지 성공: {settlement.MergeCount}회 (고급 재료 확보)");
         builder.AppendLine();
 
         if (settlement.UpcomingUnlocks.Count > 0)

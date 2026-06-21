@@ -122,6 +122,27 @@ public class CustomerManager : MonoBehaviour
         OnQueueChanged?.Invoke();
     }
 
+    /// <summary>
+    /// 영업 종료(타이머 만료 등) 시 대기열에 남은 손님을 노쇼(Left)로 마감합니다.
+    /// 정산 카운트 정확도를 위해 정산 직전 호출합니다. (호출 순서에 무관하도록 idempotent)
+    /// </summary>
+    public void FinalizeNoShows()
+    {
+        bool any = false;
+        for (int i = _queue.Count - 1; i >= 0; i--)
+        {
+            Customer customer = _queue[i];
+            if (customer != null && customer.IsActive)
+            {
+                MarkLeft(customer, false);
+                any = true;
+            }
+        }
+
+        if (any)
+            OnQueueChanged?.Invoke();
+    }
+
     void Update()
     {
         if (!_serviceActive)

@@ -28,8 +28,10 @@ public class PreparationManager : MonoBehaviour
 
     int _selectedSlotIndex = -1;
     int _garbageDisposalCost;
+    int _dailyMergeCount;
 
     public int GarbageDisposalCost => _garbageDisposalCost;
+    public int DailyMergeCount => _dailyMergeCount;
     public int SelectedSlotIndex => _selectedSlotIndex;
     public MergeGridUI MergeGridUI => mergeGridUI;
     public MergeUIController MergeUIController => mergeUIController;
@@ -319,6 +321,7 @@ public class PreparationManager : MonoBehaviour
         MergeRecipeSO recipe = FindMatchingRecipe(first.ingredient, first.level);
         if (recipe != null)
         {
+            _dailyMergeCount++;
             AddToInventory(recipe.outputIngredient, recipe.outputLevel, 1);
             OnGridChanged?.Invoke();
             OnInventoryChanged?.Invoke();
@@ -408,6 +411,7 @@ public class PreparationManager : MonoBehaviour
         _basicInventory.Clear();
         _advancedInventory.Clear();
         _garbageDisposalCost = 0;
+        _dailyMergeCount = 0;
         InitializeStarterInventory();
         SupplyManager.Instance?.ResetDailyOrder();
         BeverageBuildManager.Instance?.ResetSession();

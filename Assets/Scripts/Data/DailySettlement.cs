@@ -11,6 +11,7 @@ public class DailySettlement
     public int LeftoverCost;
     public int ServedCount;
     public int LeftCount;
+    public int MergeCount;
     public int CoinAfter;
     public readonly List<string> UpcomingUnlocks = new();
     public string UpcomingTrendName = string.Empty;
