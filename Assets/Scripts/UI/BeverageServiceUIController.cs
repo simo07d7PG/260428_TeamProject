@@ -15,18 +15,7 @@ public class BeverageServiceUIController : MonoBehaviour
     bool _externalSubscribed;
     ServeDragInteraction _serveDrag;
 
-    public static void ConfigureHostTransform(RectTransform host)
-    {
-        if (host == null)
-            return;
-
-        host.anchorMin = Vector2.zero;
-        host.anchorMax = Vector2.one;
-        host.pivot = new Vector2(0.5f, 0.5f);
-        host.anchoredPosition = Vector2.zero;
-        host.sizeDelta = Vector2.zero;
-        host.localScale = Vector3.one;
-    }
+    public static void ConfigureHostTransform(RectTransform host) => UIFactoryUtility.StretchHost(host);
 
     void Awake()
     {

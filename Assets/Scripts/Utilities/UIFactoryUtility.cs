@@ -86,4 +86,18 @@ public static class UIFactoryUtility
         rect.offsetMax = Vector2.zero;
         rect.pivot = new Vector2(0.5f, 0.5f);
     }
+
+    /// <summary>Canvas 하위 UI 호스트를 전체 화면으로 스트레치합니다. (런타임 호스트 공통 설정)</summary>
+    public static void StretchHost(RectTransform host)
+    {
+        if (host == null)
+            return;
+
+        host.anchorMin = Vector2.zero;
+        host.anchorMax = Vector2.one;
+        host.pivot = new Vector2(0.5f, 0.5f);
+        host.anchoredPosition = Vector2.zero;
+        host.sizeDelta = Vector2.zero;
+        host.localScale = Vector3.one;
+    }
 }
