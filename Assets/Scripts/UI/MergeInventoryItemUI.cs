@@ -39,8 +39,16 @@ public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandl
 
         if (iconImage != null)
         {
-            iconImage.sprite = ingredient != null ? ingredient.icon : null;
-            iconImage.enabled = ingredient != null && ingredient.icon != null;
+            Sprite iconSprite = null;
+            if (ingredient != null)
+            {
+                iconSprite = ingredient.icon != null
+                    ? ingredient.icon
+                    : ProceduralIconUtility.GetIngredientIcon(ingredient);
+            }
+
+            iconImage.sprite = iconSprite;
+            iconImage.enabled = ingredient != null;
         }
 
         if (countText != null)

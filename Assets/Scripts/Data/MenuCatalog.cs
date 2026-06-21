@@ -47,7 +47,7 @@ public static class MenuCatalog
 
     static List<MenuDefinition> BuildFallback()
     {
-        return new List<MenuDefinition>
+        List<MenuDefinition> list = new List<MenuDefinition>
         {
             new MenuDefinition
             {
@@ -80,8 +80,37 @@ public static class MenuCatalog
                 syrupCount = 2, toppingCount = 1, basePrice = 78, unlockDay = 2,
                 specialTags = new[] { "휘핑" },
                 orderPhrases = new[] { "머리 위에 구름 얹어줘요", "휘핑 올려서", "크림 잔뜩" }
+            },
+            new MenuDefinition
+            {
+                menuName = "흑당 라떼", requiredShots = 1, milkAmount = 0.6f, milkTolerance = 0.16f,
+                syrupCount = 3, toppingCount = 0, basePrice = 62, unlockDay = 2,
+                orderPhrases = new[] { "흑당 듬뿍", "아주 달게 라떼로" }
+            },
+            new MenuDefinition
+            {
+                menuName = "아인슈페너", requiredShots = 1, milkAmount = 0f, milkTolerance = 0.14f,
+                syrupCount = 0, toppingCount = 1, basePrice = 70, unlockDay = 2,
+                forbiddenStations = new[] { StationType.SteamMilk },
+                specialTags = new[] { "휘핑" },
+                orderPhrases = new[] { "크림 올린 커피", "구름 같은 크림 얹어서" }
+            },
+            new MenuDefinition
+            {
+                menuName = "딸기 라떼", requiredShots = 1, milkAmount = 0.6f, milkTolerance = 0.16f,
+                syrupCount = 1, toppingCount = 1, basePrice = 68, unlockDay = 3,
+                orderPhrases = new[] { "딸기 듬뿍", "상큼한 라떼" }
             }
         };
+
+        // 아이콘 폴백: 하드코드 메뉴는 절차적 아이콘으로 채운다.
+        foreach (MenuDefinition def in list)
+        {
+            if (def.icon == null)
+                def.icon = ProceduralIconUtility.GetMenuIcon(def);
+        }
+
+        return list;
     }
 
     /// <summary>현재 일차에 해금된 전체 메뉴(폴백 + 에셋)를 반환합니다.</summary>
@@ -130,6 +159,11 @@ public static class MenuCatalog
         };
 
         ApplySpecs(def, asset.requiredLayers);
+
+        // 아이콘 폴백: 에셋 icon이 비었으면 절차적 아이콘으로 채운다.
+        if (def.icon == null)
+            def.icon = ProceduralIconUtility.GetMenuIcon(def);
+
         return def;
     }
 

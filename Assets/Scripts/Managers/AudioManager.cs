@@ -63,6 +63,7 @@ public class AudioManager : MonoBehaviour
             return cached;
 
         AudioClip clip = Resources.Load<AudioClip>($"Audio/{key}");
+        if (clip == null) clip = ProceduralAudioUtility.Get(key);
         _cache[key] = clip;
         return clip;
     }
