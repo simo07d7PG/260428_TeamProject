@@ -138,6 +138,13 @@ public class CupCanvasUI : MonoBehaviour
         }
     }
 
+    /// <summary>화면 좌표가 컵 영역 위에 있는지 검사합니다. (도구 드래그 히트테스트)</summary>
+    public bool IsOverCup(Vector2 screenPosition, Camera eventCamera)
+    {
+        return decorArea != null
+            && RectTransformUtility.RectangleContainsScreenPoint(decorArea, screenPosition, eventCamera);
+    }
+
     /// <summary>화면 좌표를 컵(데코 영역) 정규화 좌표(0~1)로 변환합니다.</summary>
     public bool TryGetNormalizedPoint(Vector2 screenPosition, Camera eventCamera, out Vector2 normalized)
     {

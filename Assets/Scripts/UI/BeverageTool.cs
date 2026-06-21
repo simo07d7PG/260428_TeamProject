@@ -1,0 +1,228 @@
+using System;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+/// <summary>도구 종류. 컵 위에서의 조작 방식이 달라집니다.</summary>
+public enum BeverageToolKind
+{
+    Milk,    // 컵 위에서 부어 게이지 채움(연속)
+    Syrup,   // 컵 위에서 짜듯이 방울 떨어뜨림(간격)
+    Topping, // 컵에 드롭해 배치(조준)
+    Lid,     // 컵에 드롭해 씌움
+    Ice      // 컵에 드롭해 얼음 추가
+}
+
+/// <summary>
+/// GPGP식으로 직접 잡아 컵 위로 가져가 조작하는 도구입니다.
+/// 드래그로 도구를 들어 컵 위에서 동작을 수행하고, 놓으면 제자리로 돌아갑니다.
+/// </summary>
+public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    [SerializeField] BeverageToolKind kind;
+    [SerializeField] float pourPerSecond = 0.6f;
+    [SerializeField] float syrupInterval = 0.34f;
+    [SerializeField] float returnDuration = 0.16f;
+    [SerializeField] float tiltDegrees = -32f;
+
+    CupCanvasUI _cup;
+    RectTransform _rect;
+    RectTransform _parent;
+    Vector2 _restPos;
+    bool _restCaptured;
+    bool _dragging;
+    bool _overCup;
+    Vector2 _lastScreenPos;
+    Camera _cam;
+    float _syrupTimer;
+    Coroutine _returnRoutine;
+
+    public Action<string> OnResult;
+    public BeverageToolKind Kind => kind;
+
+    public void Bind(BeverageToolKind toolKind, CupCanvasUI cup)
+    {
+        kind = toolKind;
+        _cup = cup;
+    }
+
+    void Awake()
+    {
+        _rect = transform as RectTransform;
+        _parent = transform.parent as RectTransform;
+    }
+
+    void CaptureRest()
+    {
+        if (!_restCaptured && _rect != null)
+        {
+            _restPos = _rect.anchoredPosition;
+            _restCaptured = true;
+        }
+    }
+
+    static bool CanOperate()
+    {
+        return BeverageBuildManager.Instance != null && BeverageBuildManager.Instance.CanOperate();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        if (!CanOperate())
+            return;
+
+        CaptureRest();
+        if (_returnRoutine != null)
+        {
+            StopCoroutine(_returnRoutine);
+            _returnRoutine = null;
+        }
+
+        _dragging = true;
+        _syrupTimer = 0f;
+        _rect.SetAsLastSibling();
+        MoveTo(eventData);
+        UpdateOverCup(eventData);
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        if (!_dragging)
+            return;
+
+        MoveTo(eventData);
+        UpdateOverCup(eventData);
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        if (!_dragging)
+            return;
+
+        _dragging = false;
+        if (_overCup)
+            HandleDrop(eventData.position, eventData.pressEventCamera);
+
+        SetOverCup(false);
+        if (_rect != null)
+            _returnRoutine = StartCoroutine(ReturnToRest());
+    }
+
+    void MoveTo(PointerEventData eventData)
+    {
+        _lastScreenPos = eventData.position;
+        _cam = eventData.pressEventCamera;
+
+        if (_parent != null && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _parent, eventData.position, eventData.pressEventCamera, out Vector2 local))
+            _rect.anchoredPosition = local;
+    }
+
+    void UpdateOverCup(PointerEventData eventData)
+    {
+        SetOverCup(_cup != null && _cup.IsOverCup(eventData.position, eventData.pressEventCamera));
+    }
+
+    void SetOverCup(bool over)
+    {
+        if (_overCup == over)
+            return;
+
+        _overCup = over;
+
+        // 붓는 도구는 컵 위에서 기울입니다.
+        if (_rect != null && (kind == BeverageToolKind.Milk || kind == BeverageToolKind.Syrup))
+            _rect.localRotation = Quaternion.Euler(0f, 0f, over ? tiltDegrees : 0f);
+    }
+
+    void Update()
+    {
+        if (!_dragging || !_overCup || !CanOperate())
+            return;
+
+        if (kind == BeverageToolKind.Milk)
+            PourMilk();
+        else if (kind == BeverageToolKind.Syrup)
+            DripSyrup();
+    }
+
+    void PourMilk()
+    {
+        if (BeverageBuildManager.Instance.TryPourMilk(pourPerSecond * Time.unscaledDeltaTime, out string message))
+            OnResult?.Invoke(message);
+    }
+
+    void DripSyrup()
+    {
+        _syrupTimer -= Time.unscaledDeltaTime;
+        if (_syrupTimer > 0f)
+            return;
+
+        _syrupTimer = syrupInterval;
+        if (BeverageBuildManager.Instance.TryAddSyrup(NormAt(_lastScreenPos), out string message))
+            OnResult?.Invoke(message);
+        else
+            OnResult?.Invoke(message);
+    }
+
+    void HandleDrop(Vector2 screenPos, Camera cam)
+    {
+        _cam = cam;
+        string message;
+        switch (kind)
+        {
+            case BeverageToolKind.Topping:
+                BeverageBuildManager.Instance.TryAddTopping(NormAt(screenPos), out message);
+                break;
+            case BeverageToolKind.Lid:
+                BeverageBuildManager.Instance.TryApplyLid(out message);
+                break;
+            case BeverageToolKind.Ice:
+                BeverageBuildManager.Instance.TryAddIce(out message);
+                break;
+            default:
+                return; // Milk/Syrup는 컵 위에서 연속 동작으로 처리됨
+        }
+
+        OnResult?.Invoke(message);
+    }
+
+    Vector2 NormAt(Vector2 screenPos)
+    {
+        if (_cup != null && _cup.TryGetNormalizedPoint(screenPos, _cam, out Vector2 normalized))
+            return normalized;
+
+        return new Vector2(0.5f, 0.6f);
+    }
+
+    IEnumerator ReturnToRest()
+    {
+        float t = 0f;
+        Vector2 start = _rect.anchoredPosition;
+        Quaternion rotStart = _rect.localRotation;
+
+        while (t < returnDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / returnDuration);
+            _rect.anchoredPosition = Vector2.Lerp(start, _restPos, k);
+            _rect.localRotation = Quaternion.Lerp(rotStart, Quaternion.identity, k);
+            yield return null;
+        }
+
+        _rect.anchoredPosition = _restPos;
+        _rect.localRotation = Quaternion.identity;
+        _returnRoutine = null;
+    }
+
+    void OnDisable()
+    {
+        _dragging = false;
+        _overCup = false;
+        if (_rect != null && _restCaptured)
+        {
+            _rect.anchoredPosition = _restPos;
+            _rect.localRotation = Quaternion.identity;
+        }
+    }
+}

@@ -11,7 +11,6 @@ public class BeverageServiceUIController : MonoBehaviour
 {
     BeverageUIPanelFactory.BeverageUIRefs _refs;
     GameState _lastVisibleState = (GameState)(-1);
-    bool _toppingMode;
     bool _externalSubscribed;
     ServeDragInteraction _serveDrag;
 
@@ -88,10 +87,10 @@ public class BeverageServiceUIController : MonoBehaviour
 
     void SetupServeDrag()
     {
-        if (_refs.toppingInteraction == null)
+        if (_refs.cupBody == null)
             return;
 
-        _serveDrag = ManagerUtility.GetOrAddComponent<ServeDragInteraction>(_refs.toppingInteraction.gameObject);
+        _serveDrag = ManagerUtility.GetOrAddComponent<ServeDragInteraction>(_refs.cupBody.gameObject);
         _serveDrag.OnResult = SetStatus;
     }
 
@@ -115,9 +114,6 @@ public class BeverageServiceUIController : MonoBehaviour
         Bind(_refs.newCupButton, OnNewCupClicked);
         Bind(_refs.completeButton, OnCompleteClicked);
         Bind(_refs.clearButton, OnClearClicked);
-        Bind(_refs.toppingButton, OnToppingToggleClicked);
-        Bind(_refs.iceButton, OnIceClicked);
-        Bind(_refs.lidButton, OnLidClicked);
         Bind(_refs.serveButton, OnServeClicked);
     }
 
@@ -134,14 +130,18 @@ public class BeverageServiceUIController : MonoBehaviour
 
     void BindInteractionCallbacks()
     {
-        if (_refs.shotInteraction != null)
-            _refs.shotInteraction.OnResult = SetStatus;
-        if (_refs.milkInteraction != null)
-            _refs.milkInteraction.OnResult = SetStatus;
-        if (_refs.syrupInteraction != null)
-            _refs.syrupInteraction.OnResult = SetStatus;
-        if (_refs.toppingInteraction != null)
-            _refs.toppingInteraction.OnResult = SetStatus;
+        if (_refs.espressoLever != null)
+            _refs.espressoLever.OnResult = SetStatus;
+        if (_refs.milkTool != null)
+            _refs.milkTool.OnResult = SetStatus;
+        if (_refs.syrupTool != null)
+            _refs.syrupTool.OnResult = SetStatus;
+        if (_refs.toppingTool != null)
+            _refs.toppingTool.OnResult = SetStatus;
+        if (_refs.lidTool != null)
+            _refs.lidTool.OnResult = SetStatus;
+        if (_refs.iceTool != null)
+            _refs.iceTool.OnResult = SetStatus;
     }
 
     // --- 버튼 핸들러 ---
@@ -149,8 +149,7 @@ public class BeverageServiceUIController : MonoBehaviour
     protected virtual void OnNewCupClicked()
     {
         BeverageBuildManager.Instance?.StartPreviewBuild();
-        SetToppingMode(false);
-        SetStatus("새 컵을 준비했습니다. 자유롭게 만들어 보세요.");
+        SetStatus("새 컵을 준비했습니다. 도구를 컵 위로 끌어 만들어 보세요.");
     }
 
     void OnCompleteClicked()
@@ -158,37 +157,14 @@ public class BeverageServiceUIController : MonoBehaviour
         if (BeverageBuildManager.Instance == null)
             return;
 
-        if (BeverageBuildManager.Instance.CompleteBuild(out string message))
-            SetToppingMode(false);
-
+        BeverageBuildManager.Instance.CompleteBuild(out string message);
         SetStatus(message);
     }
 
     void OnClearClicked()
     {
         BeverageBuildManager.Instance?.ClearBuild();
-        SetToppingMode(false);
         SetStatus("컵을 비웠습니다.");
-    }
-
-    void OnToppingToggleClicked()
-    {
-        SetToppingMode(!_toppingMode);
-        SetStatus(_toppingMode ? "토핑 모드: 컵을 탭해 올려주세요." : "토핑 모드를 껐습니다.");
-    }
-
-    void OnIceClicked()
-    {
-        if (BeverageBuildManager.Instance != null &&
-            BeverageBuildManager.Instance.TryAddIce(out string message))
-            SetStatus(message);
-    }
-
-    void OnLidClicked()
-    {
-        if (BeverageBuildManager.Instance != null &&
-            BeverageBuildManager.Instance.TryApplyLid(out string message))
-            SetStatus(message);
     }
 
     void OnServeClicked()
@@ -196,23 +172,8 @@ public class BeverageServiceUIController : MonoBehaviour
         if (ServiceManager.Instance == null)
             return;
 
-        if (ServiceManager.Instance.TryServeSelected(out string message))
-            SetToppingMode(false);
-
+        ServiceManager.Instance.TryServeSelected(out string message);
         SetStatus(message);
-    }
-
-    void SetToppingMode(bool on)
-    {
-        _toppingMode = on;
-        _refs.toppingInteraction?.SetToppingMode(on);
-
-        if (_refs.toppingButton != null)
-        {
-            Image image = _refs.toppingButton.GetComponent<Image>();
-            if (image != null)
-                image.color = on ? new Color(0.30f, 0.55f, 0.82f, 1f) : new Color(0.24f, 0.28f, 0.34f, 1f);
-        }
     }
 
     // --- 갱신 ---
@@ -276,7 +237,6 @@ public class BeverageServiceUIController : MonoBehaviour
         bool service = GameManager.Instance != null && GameManager.Instance.CurrentState == GameState.Service;
         bool active = BeverageBuildManager.Instance.IsBuildActive;
         bool complete = BeverageBuildManager.Instance.IsBuildComplete;
-        bool canOperate = BeverageBuildManager.Instance.CanOperate();
         bool empty = BeverageBuildManager.Instance.GetCurrentSnapshot().IsEmpty;
         bool serviceMode = ServiceMode;
         bool hasSelectedCustomer = CustomerManager.Instance != null && CustomerManager.Instance.Selected != null;
@@ -288,9 +248,6 @@ public class BeverageServiceUIController : MonoBehaviour
         SetInteractable(_refs.serveButton, serviceMode && complete && hasSelectedCustomer);
         SetInteractable(_refs.completeButton, active && !complete && !empty);
         SetInteractable(_refs.clearButton, active);
-        SetInteractable(_refs.toppingButton, canOperate);
-        SetInteractable(_refs.iceButton, canOperate);
-        SetInteractable(_refs.lidButton, canOperate);
     }
 
     static void SetActive(Button button, bool value)
@@ -301,13 +258,10 @@ public class BeverageServiceUIController : MonoBehaviour
 
     void RefreshGauges(BeverageBuildSnapshot snapshot)
     {
-        _refs.milkStation?.SetGauge(snapshot.MilkAmount);
-        _refs.shotStation?.SetGauge(0f);
-
-        if (_refs.shotStation != null)
-            _refs.shotStation.SetLabel(snapshot.ShotCount > 0
+        if (_refs.espressoStation != null)
+            _refs.espressoStation.SetLabel(snapshot.ShotCount > 0
                 ? $"에스프레소\n샷 {snapshot.ShotCount}"
-                : "에스프레소\n(홀드)");
+                : "에스프레소\n레버 당김");
     }
 
     static void SetInteractable(Button button, bool value)
