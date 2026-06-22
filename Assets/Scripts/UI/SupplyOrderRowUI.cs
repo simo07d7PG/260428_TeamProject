@@ -77,6 +77,15 @@ public class SupplyOrderRowUI : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>단가 줄에 현재 보유 수량을 함께 표시합니다.</summary>
+    public void SetStock(int stock)
+    {
+        if (priceText == null || _ingredient == null)
+            return;
+
+        priceText.text = UIFontUtility.Sanitize($"{_ingredient.buyPrice} Coin   보유 {stock}");
+    }
+
     void Increase()
     {
         _quantity++;

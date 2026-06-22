@@ -68,6 +68,29 @@ public class BeverageBuildManager : MonoBehaviour
             && GameManager.Instance.CurrentState == GameState.Service;
     }
 
+    /// <summary>지정 타입 재료의 보유 수량(Lv1+Lv2 합)을 반환합니다. UI 재고 표시용.</summary>
+    public int CountAvailable(IngredientType type)
+    {
+        PreparationManager prep = PreparationManager.Instance;
+        if (prep == null)
+            return 0;
+
+        int count = 0;
+        foreach (var pair in prep.BasicInventory)
+        {
+            if (pair.Key != null && pair.Key.type == type)
+                count += pair.Value;
+        }
+
+        foreach (MergeGridItem item in prep.AdvancedInventory)
+        {
+            if (item != null && item.ingredient != null && item.ingredient.type == type)
+                count++;
+        }
+
+        return count;
+    }
+
     /// <summary>새 음료 제작을 시작합니다. order가 null이면 손님 없는 미리보기 모드입니다.</summary>
     public void StartBuild(CustomerOrder order)
     {

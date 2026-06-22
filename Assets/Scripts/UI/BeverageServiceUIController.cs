@@ -258,10 +258,20 @@ public class BeverageServiceUIController : MonoBehaviour
 
     void RefreshGauges(BeverageBuildSnapshot snapshot)
     {
+        int baseCount = BeverageBuildManager.Instance != null
+            ? BeverageBuildManager.Instance.CountAvailable(IngredientType.Base)
+            : 0;
+
         if (_refs.espressoStation != null)
             _refs.espressoStation.SetLabel(snapshot.ShotCount > 0
-                ? $"에스프레소\n샷 {snapshot.ShotCount}"
-                : "에스프레소\n레버 당김");
+                ? $"에스프레소 샷{snapshot.ShotCount}\n원두 x{baseCount}"
+                : $"에스프레소\n원두 x{baseCount}");
+
+        _refs.milkTool?.RefreshStock();
+        _refs.syrupTool?.RefreshStock();
+        _refs.toppingTool?.RefreshStock();
+        _refs.lidTool?.RefreshStock();
+        _refs.iceTool?.RefreshStock();
     }
 
     static void SetInteractable(Button button, bool value)

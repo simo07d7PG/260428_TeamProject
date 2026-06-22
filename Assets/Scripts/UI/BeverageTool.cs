@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -37,6 +38,8 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     float _syrupTimer;
     Coroutine _returnRoutine;
 
+    [SerializeField] TextMeshProUGUI stockText;
+
     public Action<string> OnResult;
     public BeverageToolKind Kind => kind;
 
@@ -44,6 +47,40 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         kind = toolKind;
         _cup = cup;
+    }
+
+    public void BindStockBadge(TextMeshProUGUI badge)
+    {
+        stockText = badge;
+    }
+
+    /// <summary>해당 재료 보유량을 배지에 표시합니다. (Lid/Ice는 소비 없음 → 숨김)</summary>
+    public void RefreshStock()
+    {
+        if (stockText == null)
+            return;
+
+        if (!TryGetIngredientType(out IngredientType type) || BeverageBuildManager.Instance == null)
+        {
+            stockText.gameObject.SetActive(false);
+            return;
+        }
+
+        int count = BeverageBuildManager.Instance.CountAvailable(type);
+        stockText.gameObject.SetActive(true);
+        stockText.text = $"x{count}";
+        stockText.color = count > 0 ? new Color(0.1f, 0.1f, 0.12f, 1f) : new Color(0.85f, 0.25f, 0.2f, 1f);
+    }
+
+    bool TryGetIngredientType(out IngredientType type)
+    {
+        switch (kind)
+        {
+            case BeverageToolKind.Milk: type = IngredientType.Milk; return true;
+            case BeverageToolKind.Syrup: type = IngredientType.Syrup; return true;
+            case BeverageToolKind.Topping: type = IngredientType.Topping; return true;
+            default: type = IngredientType.Base; return false; // Lid/Ice는 재고 없음
+        }
     }
 
     void Awake()

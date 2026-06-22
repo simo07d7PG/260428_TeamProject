@@ -115,8 +115,20 @@ public static class BeverageUIPanelFactory
         labelText.color = new Color(0.1f, 0.1f, 0.12f, 1f);
         labelText.raycastTarget = false;
 
+        // 재고 배지 (좌측 상단)
+        TextMeshProUGUI stockBadge = CreateLabel(rect, "StockBadge", string.Empty, 15);
+        stockBadge.fontStyle = FontStyles.Bold;
+        RectTransform badgeRect = stockBadge.rectTransform;
+        badgeRect.anchorMin = new Vector2(0f, 1f);
+        badgeRect.anchorMax = new Vector2(0f, 1f);
+        badgeRect.pivot = new Vector2(0f, 1f);
+        badgeRect.anchoredPosition = new Vector2(4f, -2f);
+        badgeRect.sizeDelta = new Vector2(48f, 24f);
+        stockBadge.alignment = TextAlignmentOptions.TopLeft;
+
         BeverageTool tool = obj.GetComponent<BeverageTool>();
         tool.Bind(kind, cup);
+        tool.BindStockBadge(stockBadge);
         return tool;
     }
 

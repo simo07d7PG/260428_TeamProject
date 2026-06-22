@@ -50,7 +50,7 @@ public class SupplyUIController : MonoBehaviour
             SupplyManager.Instance.OnSupplyStateChanged += RefreshAll;
 
         if (PreparationManager.Instance != null)
-            PreparationManager.Instance.OnInventoryChanged += RefreshWarnings;
+            PreparationManager.Instance.OnInventoryChanged += HandleInventoryChanged;
 
         RefreshAll();
     }
@@ -61,7 +61,13 @@ public class SupplyUIController : MonoBehaviour
             SupplyManager.Instance.OnSupplyStateChanged -= RefreshAll;
 
         if (PreparationManager.Instance != null)
-            PreparationManager.Instance.OnInventoryChanged -= RefreshWarnings;
+            PreparationManager.Instance.OnInventoryChanged -= HandleInventoryChanged;
+    }
+
+    void HandleInventoryChanged()
+    {
+        RefreshWarnings();
+        RefreshStocks();
     }
 
     void EnsureManagers()
@@ -181,7 +187,20 @@ public class SupplyUIController : MonoBehaviour
     {
         RefreshSummary();
         RefreshWarnings();
+        RefreshStocks();
         RefreshInteractable();
+    }
+
+    void RefreshStocks()
+    {
+        if (SupplyManager.Instance == null)
+            return;
+
+        foreach (SupplyOrderRowUI row in _rows)
+        {
+            if (row != null && row.Ingredient != null)
+                row.SetStock(SupplyManager.Instance.GetTotalStock(row.Ingredient));
+        }
     }
 
     void RefreshSummary()
