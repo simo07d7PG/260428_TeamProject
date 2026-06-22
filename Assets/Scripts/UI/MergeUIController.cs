@@ -17,6 +17,7 @@ public class MergeUIController : MonoBehaviour
     [SerializeField] float feedbackDuration = 2f;
 
     float _feedbackTimer;
+    GameObject _autoMergeButton;
 
     const float InventoryItemSize = 80f;
 
@@ -25,8 +26,38 @@ public class MergeUIController : MonoBehaviour
         ResolveReferences();
         basicInventoryRoot = InventoryScrollUtility.EnsureSetup(basicInventoryRoot, InventoryItemSize, 8f);
         advancedInventoryRoot = InventoryScrollUtility.EnsureSetup(advancedInventoryRoot, InventoryItemSize, 8f);
+        BuildAutoMergeButton();
         UIFontUtility.ApplyToHierarchy(transform.root);
         ValidateReferences();
+    }
+
+    /// <summary>준비 단계 한정으로 보이는 '자동 합성' 버튼을 런타임에 생성합니다.</summary>
+    void BuildAutoMergeButton()
+    {
+        RectTransform canvasRect = transform.root as RectTransform;
+        if (canvasRect == null)
+            return;
+
+        Button button = UIFactoryUtility.CreateButton(canvasRect, "AutoMergeButton", "자동 합성", new Color(0.28f, 0.5f, 0.42f, 1f));
+        RectTransform rect = button.GetComponent<RectTransform>();
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(60f, -120f); // 레시피 버튼 아래(좌상단). 필요 시 조정.
+        rect.sizeDelta = new Vector2(150f, 44f);
+        button.onClick.AddListener(() => PreparationManager.Instance?.MergeAllPairs());
+
+        _autoMergeButton = button.gameObject;
+        RefreshAutoMergeVisibility();
+    }
+
+    void RefreshAutoMergeVisibility()
+    {
+        if (_autoMergeButton == null)
+            return;
+
+        bool prep = GameManager.Instance == null || GameManager.Instance.CurrentState == GameState.Preparation;
+        if (_autoMergeButton.activeSelf != prep)
+            _autoMergeButton.SetActive(prep);
     }
 
     void ResolveReferences()
@@ -73,10 +104,15 @@ public class MergeUIController : MonoBehaviour
             PreparationManager.Instance.OnInventoryChanged += RefreshInventory;
             PreparationManager.Instance.OnDisposalCostChanged += RefreshDisposalCost;
             PreparationManager.Instance.OnMergeCompleted += ShowMergeResult;
+            PreparationManager.Instance.OnMergeStatsChanged += RefreshStatus;
         }
 
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnStateChanged += HandleStateChanged;
+
         RefreshInventory();
-        RefreshDisposalCost(PreparationManager.Instance != null ? PreparationManager.Instance.GarbageDisposalCost : 0);
+        RefreshStatus();
+        RefreshAutoMergeVisibility();
     }
 
     void OnDisable()
@@ -86,8 +122,14 @@ public class MergeUIController : MonoBehaviour
             PreparationManager.Instance.OnInventoryChanged -= RefreshInventory;
             PreparationManager.Instance.OnDisposalCostChanged -= RefreshDisposalCost;
             PreparationManager.Instance.OnMergeCompleted -= ShowMergeResult;
+            PreparationManager.Instance.OnMergeStatsChanged -= RefreshStatus;
         }
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnStateChanged -= HandleStateChanged;
     }
+
+    void HandleStateChanged(GameState state) => RefreshAutoMergeVisibility();
 
     void Update()
     {
@@ -193,10 +235,18 @@ public class MergeUIController : MonoBehaviour
         return new List<InventoryViewData>(grouped.Values);
     }
 
-    void RefreshDisposalCost(int cost)
+    void RefreshDisposalCost(int cost) => RefreshStatus();
+
+    /// <summary>합성 목표 진행·콤보·폐기 비용을 한 줄로 표시합니다.</summary>
+    void RefreshStatus()
     {
-        if (disposalCostText != null)
-            disposalCostText.text = UIFontUtility.Sanitize($"쓰레기 폐기 비용: {cost} Coin");
+        if (disposalCostText == null || PreparationManager.Instance == null)
+            return;
+
+        PreparationManager pm = PreparationManager.Instance;
+        string goal = pm.IsDailyGoalComplete ? "달성 ✓" : $"{pm.DailyMergeCount}/{pm.DailyMergeGoal}";
+        string combo = pm.CurrentCombo >= 2 ? $"   콤보 x{pm.CurrentCombo}" : string.Empty;
+        disposalCostText.text = UIFontUtility.Sanitize($"합성 목표 {goal}{combo}   ·   폐기 {pm.GarbageDisposalCost} Coin");
     }
 
     void ShowMergeResult(MergeResult result)

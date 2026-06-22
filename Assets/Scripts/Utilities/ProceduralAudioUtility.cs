@@ -51,9 +51,60 @@ public static class ProceduralAudioUtility
                 return BuildCustomerLeave();
             case "drink_complete":
                 return BuildDrinkComplete();
+            case "cup_take":
+                return BuildTick(880f, 0.06f);
+            case "ice_add":
+                return BuildTick(1500f, 0.05f);
+            case "topping_add":
+                return BuildTick(520f, 0.08f);
+            case "lid_close":
+                return BuildNoise(0.07f, 0.4f);
+            case "shot_extract":
+                return BuildNoise(0.45f, 0.22f);
+            case "milk_pour":
+                return BuildNoise(0.30f, 0.18f);
+            case "syrup_drop":
+                return BuildBlip(900f, 520f, 0.09f);
             default:
                 return null;
         }
+    }
+
+    static AudioClip BuildTick(float freq, float duration)
+    {
+        int total = SecondsToSamples(duration);
+        float[] data = new float[total];
+        WriteTone(data, 0, total, freq, 0.5f, WaveType.Sine);
+        ApplyEnvelope(data, 0.003f, duration * 0.6f);
+        return MakeClip("sfx_tick", data);
+    }
+
+    static AudioClip BuildNoise(float duration, float amp)
+    {
+        int total = SecondsToSamples(duration);
+        float[] data = new float[total];
+        uint seed = 987654u;
+        for (int i = 0; i < total; i++)
+            data[i] = NextNoise(ref seed) * amp;
+        ApplyEnvelope(data, 0.01f, duration * 0.5f);
+        return MakeClip("sfx_noise", data);
+    }
+
+    static AudioClip BuildBlip(float startFreq, float endFreq, float duration)
+    {
+        int total = SecondsToSamples(duration);
+        float[] data = new float[total];
+        float phase = 0f;
+        for (int i = 0; i < total; i++)
+        {
+            float t = i / (float)total;
+            float freq = Mathf.Lerp(startFreq, endFreq, t);
+            phase += freq / SampleRate;
+            if (phase >= 1f) phase -= 1f;
+            data[i] = Mathf.Sin(phase * 2f * Mathf.PI) * 0.45f;
+        }
+        ApplyEnvelope(data, 0.004f, duration * 0.5f);
+        return MakeClip("sfx_blip", data);
     }
 
     // ── 개별 효과음 합성 ─────────────────────────────────────────────

@@ -188,7 +188,8 @@ public class ServiceManager : MonoBehaviour
 
         BeverageBuildSnapshot snapshot = BeverageBuildManager.Instance.GetCurrentSnapshot();
         ServingScoreBreakdown score = ServingEvaluator.Evaluate(customer.Order, snapshot, customer.PatienceRatio);
-        int payout = CalculatePayout(customer, score);
+        int premium = snapshot != null ? Mathf.Min(snapshot.PremiumIngredientCount, 3) : 0;
+        int payout = CalculatePayout(customer, score, premium);
 
         if (payout > 0 && GameManager.Instance != null)
         {
@@ -196,8 +197,9 @@ public class ServiceManager : MonoBehaviour
             TotalRevenue += payout;
         }
 
+        string premiumNote = premium > 0 && payout > 0 ? $" · 프리미엄x{premium} 보너스" : string.Empty;
         message = payout > 0
-            ? $"{score.Summary} (+{payout} Coin)"
+            ? $"{score.Summary} (+{payout} Coin{premiumNote})"
             : $"{score.Summary} (환불)";
 
         OnServed?.Invoke(customer, score, payout);
@@ -208,14 +210,16 @@ public class ServiceManager : MonoBehaviour
         return true;
     }
 
-    int CalculatePayout(Customer customer, ServingScoreBreakdown score)
+    int CalculatePayout(Customer customer, ServingScoreBreakdown score, int premiumIngredients)
     {
         if (score == null || !score.IsCorrectMenu || score.PayoutMultiplier <= 0f)
             return 0;
 
         float patienceModifier = 1f + (customer.PatienceRatio - 0.5f) * 0.7f; // 0.65 ~ 1.35
         float menuMultiplier = GetMenuMultiplier(customer.Order);
-        float raw = customer.Order.BasePrice * score.PayoutMultiplier * patienceModifier * menuMultiplier;
+        // 머지로 만든 Lv2 프리미엄 재료를 쓰면 재료당 +12%(최대 3개 = +36%) 매출 보너스.
+        float premiumMultiplier = 1f + 0.12f * Mathf.Clamp(premiumIngredients, 0, 3);
+        float raw = customer.Order.BasePrice * score.PayoutMultiplier * patienceModifier * menuMultiplier * premiumMultiplier;
         return Mathf.Max(1, Mathf.RoundToInt(raw));
     }
 

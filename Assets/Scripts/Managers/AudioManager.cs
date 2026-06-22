@@ -59,6 +59,11 @@ public class AudioManager : MonoBehaviour
 
     AudioClip Resolve(string key)
     {
+        // 인스펙터(CafeAssetConfig) 지정이 최우선.
+        AudioClip configured = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.GetSfx(key) : null;
+        if (configured != null)
+            return configured;
+
         if (_cache.TryGetValue(key, out AudioClip cached))
             return cached;
 

@@ -10,10 +10,13 @@ using UnityEngine.UI;
 public class CustomerQueueUIController : MonoBehaviour
 {
     const int MaxCards = 4;
-    const float CardWidth = 240f;
-    const float CardHeight = 86f;
+    const float CardWidth = 248f;
+    const float CardHeight = 96f;
+    // 상단바(DayFlow HUD, 높이 56) 아래로 대기열을 내려 겹침을 방지합니다.
+    const float TopOffset = 64f;
 
     RectTransform _panelRoot;
+    RectTransform _rowRoot;
     TextMeshProUGUI _counterText;
     readonly List<CustomerCardUI> _cards = new();
     GameState _lastVisibleState = (GameState)(-1);
@@ -75,35 +78,51 @@ public class CustomerQueueUIController : MonoBehaviour
 
     void BuildPanel()
     {
+        // 상단 중앙: [헤더] 위에, 아래에 손님 카드 가로줄
         GameObject panelObject = UIFactoryUtility.CreateUIObject(
             "CustomerQueuePanel", transform, typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         _panelRoot = panelObject.GetComponent<RectTransform>();
-        _panelRoot.anchorMin = new Vector2(1f, 1f);
-        _panelRoot.anchorMax = new Vector2(1f, 1f);
-        _panelRoot.pivot = new Vector2(1f, 1f);
-        _panelRoot.anchoredPosition = new Vector2(-16f, -64f);
-        _panelRoot.sizeDelta = new Vector2(CardWidth + 16f, 0f);
+        _panelRoot.anchorMin = new Vector2(0.5f, 1f);
+        _panelRoot.anchorMax = new Vector2(0.5f, 1f);
+        _panelRoot.pivot = new Vector2(0.5f, 1f);
+        _panelRoot.anchoredPosition = new Vector2(0f, -TopOffset);
 
-        VerticalLayoutGroup layout = panelObject.GetComponent<VerticalLayoutGroup>();
-        layout.spacing = 8f;
-        layout.childAlignment = TextAnchor.UpperRight;
-        layout.childControlWidth = true;
-        layout.childControlHeight = true;
-        layout.childForceExpandWidth = false;
-        layout.childForceExpandHeight = false;
-        layout.padding = new RectOffset(8, 8, 8, 8);
+        VerticalLayoutGroup vlayout = panelObject.GetComponent<VerticalLayoutGroup>();
+        vlayout.spacing = 4f;
+        vlayout.childAlignment = TextAnchor.UpperCenter;
+        vlayout.childControlWidth = true;
+        vlayout.childControlHeight = true;
+        vlayout.childForceExpandWidth = false;
+        vlayout.childForceExpandHeight = false;
+        vlayout.padding = new RectOffset(8, 8, 6, 6);
 
-        ContentSizeFitter fitter = panelObject.GetComponent<ContentSizeFitter>();
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        ContentSizeFitter vfitter = panelObject.GetComponent<ContentSizeFitter>();
+        vfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        vfitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        _counterText = UIFactoryUtility.CreateLabel(_panelRoot, "HeaderText", "대기 손님", 18f);
-        _counterText.alignment = TextAlignmentOptions.Right;
-        AddLayoutElement(_counterText.rectTransform, CardWidth, 28f);
+        _counterText = UIFactoryUtility.CreateLabel(_panelRoot, "HeaderText", "대기 손님", 16f);
+        _counterText.alignment = TextAlignmentOptions.Center;
+        AddLayoutElement(_counterText.rectTransform, 360f, 22f);
+
+        GameObject rowObject = UIFactoryUtility.CreateUIObject(
+            "QueueRow", _panelRoot, typeof(HorizontalLayoutGroup), typeof(ContentSizeFitter));
+        _rowRoot = rowObject.GetComponent<RectTransform>();
+
+        HorizontalLayoutGroup hlayout = rowObject.GetComponent<HorizontalLayoutGroup>();
+        hlayout.spacing = 10f;
+        hlayout.childAlignment = TextAnchor.UpperCenter;
+        hlayout.childControlWidth = true;
+        hlayout.childControlHeight = true;
+        hlayout.childForceExpandWidth = false;
+        hlayout.childForceExpandHeight = false;
+
+        ContentSizeFitter hfitter = rowObject.GetComponent<ContentSizeFitter>();
+        hfitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        hfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
         for (int i = 0; i < MaxCards; i++)
         {
-            CustomerCardUI card = CreateCard(_panelRoot);
+            CustomerCardUI card = CreateCard(_rowRoot);
             card.gameObject.SetActive(false);
             _cards.Add(card);
         }
@@ -126,19 +145,30 @@ public class CustomerQueueUIController : MonoBehaviour
         iconRect.anchorMax = new Vector2(0f, 0.5f);
         iconRect.pivot = new Vector2(0f, 0.5f);
         iconRect.anchoredPosition = new Vector2(10f, 8f);
-        iconRect.sizeDelta = new Vector2(52f, 52f);
+        iconRect.sizeDelta = new Vector2(56f, 56f);
         icon.preserveAspect = true;
         icon.raycastTarget = false;
         icon.enabled = false;
 
-        TextMeshProUGUI phrase = UIFactoryUtility.CreateLabel(cardRect, "PhraseText", string.Empty, 15f);
+        TextMeshProUGUI name = UIFactoryUtility.CreateLabel(cardRect, "NameText", string.Empty, 18f);
+        name.fontStyle = FontStyles.Bold;
+        name.alignment = TextAlignmentOptions.MidlineLeft;
+        RectTransform nameRect = name.rectTransform;
+        nameRect.anchorMin = new Vector2(0f, 1f);
+        nameRect.anchorMax = new Vector2(1f, 1f);
+        nameRect.pivot = new Vector2(0f, 1f);
+        nameRect.offsetMin = new Vector2(74f, -34f);
+        nameRect.offsetMax = new Vector2(-8f, -6f);
+
+        TextMeshProUGUI phrase = UIFactoryUtility.CreateLabel(cardRect, "PhraseText", string.Empty, 13f);
         phrase.alignment = TextAlignmentOptions.MidlineLeft;
+        phrase.color = new Color(0.8f, 0.82f, 0.86f, 1f);
         RectTransform phraseRect = phrase.rectTransform;
         phraseRect.anchorMin = new Vector2(0f, 1f);
         phraseRect.anchorMax = new Vector2(1f, 1f);
         phraseRect.pivot = new Vector2(0f, 1f);
-        phraseRect.offsetMin = new Vector2(72f, -42f);
-        phraseRect.offsetMax = new Vector2(-10f, -8f);
+        phraseRect.offsetMin = new Vector2(74f, -56f);
+        phraseRect.offsetMax = new Vector2(-8f, -36f);
 
         Image patienceFill = UIFactoryUtility.CreateFilledBar(
             cardRect, "PatienceBar",
@@ -148,11 +178,11 @@ public class CustomerQueueUIController : MonoBehaviour
         barRect.anchorMin = new Vector2(0f, 0f);
         barRect.anchorMax = new Vector2(1f, 0f);
         barRect.pivot = new Vector2(0.5f, 0f);
-        barRect.offsetMin = new Vector2(72f, 12f);
-        barRect.offsetMax = new Vector2(-10f, 24f);
+        barRect.offsetMin = new Vector2(74f, 12f);
+        barRect.offsetMax = new Vector2(-8f, 26f);
 
         CustomerCardUI card = cardObject.GetComponent<CustomerCardUI>();
-        card.Bind(background, icon, phrase, patienceFill, cardObject.GetComponent<Button>());
+        card.Bind(background, icon, name, phrase, patienceFill, cardObject.GetComponent<Button>());
         return card;
     }
 

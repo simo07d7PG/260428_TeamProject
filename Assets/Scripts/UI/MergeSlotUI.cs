@@ -14,6 +14,8 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     [SerializeField] Image highlightImage;
     [SerializeField] Color selectedColor = new Color(1f, 0.92f, 0.4f, 0.8f);
     [SerializeField] Color garbageColor = new Color(0.35f, 0.35f, 0.35f, 1f);
+    [SerializeField] Color hintColor = new Color(0.4f, 0.9f, 0.5f, 0.7f); // 병합 가능 힌트
+    static readonly Color PremiumTint = new Color(1f, 0.92f, 0.55f, 1f);   // Lv2 프리미엄 강조
 
     public int SlotIndex => slotIndex;
 
@@ -103,7 +105,17 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         if (MergeDragContext.SourceSlotIndex >= 0)
         {
-            PreparationManager.Instance.TryMoveSlot(MergeDragContext.SourceSlotIndex, slotIndex);
+            int from = MergeDragContext.SourceSlotIndex;
+            if (from != slotIndex)
+            {
+                // 끌어다 겹친 칸이 병합 가능하면 합치고(드래그-투-머지), 아니면 이동/스왑.
+                MergeGridItem dragged = PreparationManager.Instance.GetSlot(from);
+                MergeGridItem target = PreparationManager.Instance.GetSlot(slotIndex);
+                if (dragged.CanMergeWith(target))
+                    PreparationManager.Instance.MergeSlotsAndNotify(from, slotIndex);
+                else
+                    PreparationManager.Instance.TryMoveSlot(from, slotIndex);
+            }
             MergeDragContext.End();
             return;
         }
@@ -139,8 +151,27 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         if (highlightImage == null)
             return;
 
-        highlightImage.enabled = selectedIndex == slotIndex;
-        highlightImage.color = selectedColor;
+        if (selectedIndex == slotIndex)
+        {
+            highlightImage.enabled = true;
+            highlightImage.color = selectedColor;
+            return;
+        }
+
+        // 선택한 칸과 합칠 수 있는 칸을 살짝 강조(병합 가능 힌트).
+        if (selectedIndex >= 0 && PreparationManager.Instance != null)
+        {
+            MergeGridItem selected = PreparationManager.Instance.GetSlot(selectedIndex);
+            MergeGridItem mine = PreparationManager.Instance.GetSlot(slotIndex);
+            if (mine.CanMergeWith(selected))
+            {
+                highlightImage.enabled = true;
+                highlightImage.color = hintColor;
+                return;
+            }
+        }
+
+        highlightImage.enabled = false;
     }
 
     void Refresh()
@@ -169,7 +200,7 @@ public class MergeSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             return;
         }
 
-        iconImage.color = Color.white;
+        iconImage.color = item.level >= 2 ? PremiumTint : Color.white; // Lv2 프리미엄 강조
         iconImage.sprite = item.ingredient != null ? item.ingredient.icon : null;
     }
 }

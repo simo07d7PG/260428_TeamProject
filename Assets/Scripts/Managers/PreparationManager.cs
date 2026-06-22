@@ -29,6 +29,12 @@ public class PreparationManager : MonoBehaviour
     int _selectedSlotIndex = -1;
     int _garbageDisposalCost;
     int _dailyMergeCount;
+    int _comboCount;
+    float _comboExpireTime;
+    bool _goalRewarded;
+
+    const float ComboWindowSeconds = 4f; // 이 시간 안에 연속 성공하면 콤보 누적
+    const int BaseDailyMergeGoal = 4;    // 일일 합성 목표(일차마다 +1)
 
     public int GarbageDisposalCost => _garbageDisposalCost;
     public int DailyMergeCount => _dailyMergeCount;
@@ -38,11 +44,19 @@ public class PreparationManager : MonoBehaviour
     public IReadOnlyDictionary<IngredientSO, int> BasicInventory => _basicInventory;
     public IReadOnlyList<MergeGridItem> AdvancedInventory => _advancedInventory;
 
+    /// <summary>현재 콤보(시간창이 지나면 0).</summary>
+    public int CurrentCombo => Time.time <= _comboExpireTime ? _comboCount : 0;
+    /// <summary>오늘의 합성 목표 횟수.</summary>
+    public int DailyMergeGoal => BaseDailyMergeGoal + Mathf.Max(0, (GameManager.Instance != null ? GameManager.Instance.CurrentDay : 1) - 1);
+    public bool IsDailyGoalComplete => _dailyMergeCount >= DailyMergeGoal;
+
     public event Action OnGridChanged;
     public event Action OnInventoryChanged;
     public event Action<int> OnDisposalCostChanged;
     public event Action<MergeResult> OnMergeCompleted;
     public event Action<int> OnSlotSelected;
+    public event Action OnMergeStatsChanged;    // 콤보/목표 진행 갱신용
+    public event Action<int> OnDailyGoalReward;  // 목표 달성 보상 코인
 
     void Awake()
     {
@@ -113,6 +127,7 @@ public class PreparationManager : MonoBehaviour
         EnsureUIHost<FeedbackUIController>(canvas, "FeedbackUI", FeedbackUIController.ConfigureHostTransform);
         EnsureUIHost<HelpUIController>(canvas, "HelpUI", HelpUIController.ConfigureHostTransform);
         EnsureUIHost<RecipeBookUIController>(canvas, "RecipeBookUI", RecipeBookUIController.ConfigureHostTransform);
+        // 메인 메뉴는 별도 'MainMenu' 씬에서 동작합니다. (MainMenuUIController)
     }
 
     static void EnsureUIHost<T>(Canvas canvas, string hostName, Action<RectTransform> configure)
@@ -174,10 +189,29 @@ public class PreparationManager : MonoBehaviour
 
     void InitializeStarterInventory()
     {
-        if (!HasValidStarterIngredients(starterIngredients))
+        // 첫 영업 루프를 무조건 통과할 수 있도록 종류별 최소 10개를 보장합니다.
+        int qty = Mathf.Max(10, starterCountPerIngredient);
+
+        // 첫날 모든 메뉴를 제작할 수 있도록 '주문 가능한(구매 가능)' 재료 전부를 종류별로 지급합니다.
+        if (DataManager.Instance != null && DataManager.Instance.IsLoaded)
         {
-            AutoLoadConfiguration();
+            bool stockedAny = false;
+            foreach (IngredientSO ingredient in DataManager.Instance.GetOrderableIngredients())
+            {
+                if (ingredient == null)
+                    continue;
+
+                AddToInventory(ingredient, 1, qty);
+                stockedAny = true;
+            }
+
+            if (stockedAny)
+                return;
         }
+
+        // 폴백: DataManager가 없으면 인스펙터의 starterIngredients를 사용합니다.
+        if (!HasValidStarterIngredients(starterIngredients))
+            AutoLoadConfiguration();
 
         if (!HasValidStarterIngredients(starterIngredients))
         {
@@ -190,7 +224,7 @@ public class PreparationManager : MonoBehaviour
             if (ingredient == null)
                 continue;
 
-            AddToInventory(ingredient, 1, starterCountPerIngredient);
+            AddToInventory(ingredient, 1, qty);
         }
     }
 
@@ -326,22 +360,103 @@ public class PreparationManager : MonoBehaviour
         {
             _dailyMergeCount++;
             AddToInventory(recipe.outputIngredient, recipe.outputLevel, 1);
+
+            // 콤보: 짧은 시간 내 연속 성공 시 누적, 소액 보너스 코인 지급.
+            _comboCount = Time.time <= _comboExpireTime ? _comboCount + 1 : 1;
+            _comboExpireTime = Time.time + ComboWindowSeconds;
+
+            int comboBonus = 0;
+            if (_comboCount >= 2 && GameManager.Instance != null)
+            {
+                comboBonus = 2 * (_comboCount - 1);
+                GameManager.Instance.Coin += comboBonus;
+            }
+
+            int goalReward = TryAwardDailyGoal();
+
             OnGridChanged?.Invoke();
             OnInventoryChanged?.Invoke();
+            OnMergeStatsChanged?.Invoke();
+
+            string combo = _comboCount >= 2 ? $" 콤보x{_comboCount}!" : string.Empty;
+            string bonus = comboBonus > 0 ? $" (+{comboBonus})" : string.Empty;
+            string goal = goalReward > 0 ? $"  ★목표 달성 +{goalReward} Coin" : string.Empty;
 
             return MergeResult.Success(
                 recipe.outputIngredient,
                 recipe.outputLevel,
-                $"{recipe.outputIngredient.ingredientName} 제작 성공!");
+                $"{recipe.outputIngredient.ingredientName} 제작 성공!{combo}{bonus}{goal}");
         }
 
+        // 실패: 콤보가 끊기고 쓰레기가 생성됩니다.
+        _comboCount = 0;
         int disposalCost = MergeGridItem.GarbageDisposalCost;
         _garbageDisposalCost += disposalCost;
         PlaceGarbageOnGrid();
         OnGridChanged?.Invoke();
         OnDisposalCostChanged?.Invoke(_garbageDisposalCost);
+        OnMergeStatsChanged?.Invoke();
 
         return MergeResult.Failure(disposalCost, "알 수 없는 조합입니다. 쓰레기가 생성되었습니다.");
+    }
+
+    /// <summary>오늘의 합성 목표를 처음 달성하면 보상 코인을 1회 지급합니다.</summary>
+    int TryAwardDailyGoal()
+    {
+        if (_goalRewarded || _dailyMergeCount < DailyMergeGoal || GameManager.Instance == null)
+            return 0;
+
+        _goalRewarded = true;
+        int reward = 40 + 10 * Mathf.Max(0, GameManager.Instance.CurrentDay - 1);
+        GameManager.Instance.Coin += reward;
+        OnDailyGoalReward?.Invoke(reward);
+        return reward;
+    }
+
+    /// <summary>두 슬롯을 병합하고 결과 이벤트까지 발생시킵니다(드래그-투-머지 등 외부 호출용).</summary>
+    public MergeResult MergeSlotsAndNotify(int firstIndex, int secondIndex)
+    {
+        MergeResult result = TryMergeSlots(firstIndex, secondIndex);
+        ClearSelection();
+        OnMergeCompleted?.Invoke(result);
+        return result;
+    }
+
+    /// <summary>그리드에서 레시피가 있는 짝을 모두 자동으로 병합합니다. 병합 횟수를 반환합니다.</summary>
+    public int MergeAllPairs()
+    {
+        int merges = 0;
+        int safety = 0;
+        bool merged = true;
+
+        while (merged && safety++ < GridSize * GridSize)
+        {
+            merged = false;
+            for (int i = 0; i < GridSize && !merged; i++)
+            {
+                if (_grid[i].IsEmpty || _grid[i].isGarbage)
+                    continue;
+
+                for (int j = i + 1; j < GridSize; j++)
+                {
+                    if (!_grid[i].CanMergeWith(_grid[j]))
+                        continue;
+                    if (FindMatchingRecipe(_grid[i].ingredient, _grid[i].level) == null)
+                        continue; // 쓰레기를 만들 짝은 건너뜀
+
+                    if (TryMergeSlots(i, j).resultType == MergeResultType.Success)
+                        merges++;
+                    merged = true;
+                    break;
+                }
+            }
+        }
+
+        MergeResult summary = merges > 0
+            ? MergeResult.Success(null, 0, $"자동 합성 {merges}회 완료!" + (CurrentCombo >= 2 ? $" 콤보x{CurrentCombo}!" : string.Empty))
+            : MergeResult.Invalid("합칠 수 있는 짝이 없습니다.");
+        OnMergeCompleted?.Invoke(summary);
+        return merges;
     }
 
     public void AddToInventory(IngredientSO ingredient, int level, int count)
@@ -415,12 +530,16 @@ public class PreparationManager : MonoBehaviour
         _advancedInventory.Clear();
         _garbageDisposalCost = 0;
         _dailyMergeCount = 0;
+        _comboCount = 0;
+        _comboExpireTime = 0f;
+        _goalRewarded = false;
         InitializeStarterInventory();
         SupplyManager.Instance?.ResetDailyOrder();
         BeverageBuildManager.Instance?.ResetSession();
         OnGridChanged?.Invoke();
         OnInventoryChanged?.Invoke();
         OnDisposalCostChanged?.Invoke(_garbageDisposalCost);
+        OnMergeStatsChanged?.Invoke();
     }
 
     MergeRecipeSO FindMatchingRecipe(IngredientSO ingredient, int level)

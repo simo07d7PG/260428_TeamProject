@@ -124,6 +124,22 @@ public class BeverageBuildSnapshot
         }
     }
 
+    /// <summary>Lv2 이상(머지로 만든 프리미엄) 재료를 사용한 레이어 수.</summary>
+    public int PremiumIngredientCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (BeverageLayer layer in _layers)
+            {
+                if (layer != null && layer.level >= 2)
+                    count++;
+            }
+
+            return count;
+        }
+    }
+
     public void Clear()
     {
         _layers.Clear();

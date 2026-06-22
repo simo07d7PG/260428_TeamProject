@@ -39,7 +39,7 @@ public class MenuDefinition
 public static class MenuCatalog
 {
     public const float MatchThreshold = 0.55f;
-    const float Lv2ToleranceBonus = 0.1f;
+    const float Lv2ToleranceBonus = 0.15f; // Lv2 프리미엄 재료 사용 시 양 허용오차 보너스(머지 보상 강화)
 
     static List<MenuDefinition> _fallback;
 
@@ -272,7 +272,7 @@ public static class MenuCatalog
         if (snapshot.ShotCount >= def.requiredShots)
             return 1f;
 
-        return snapshot.ShotCount > 0 ? 0.5f : 0f;
+        return snapshot.ShotCount > 0 ? 0.35f : 0f;
     }
 
     static float ScoreMilk(MenuDefinition def, BeverageBuildSnapshot snapshot, bool lv2Bonus)
@@ -292,7 +292,9 @@ public static class MenuCatalog
             return 1f;
 
         int diff = Mathf.Abs(target - actual);
-        return Mathf.Clamp01(1f - diff * 0.4f);
+        // 원치 않는 재료를 넣은 경우(목표 0인데 투입)는 더 크게 감점해 '다른 음료'로 판정되게 합니다.
+        float perDiff = target == 0 ? 0.6f : 0.5f;
+        return Mathf.Clamp01(1f - diff * perDiff);
     }
 
     static float ForbiddenPenalty(MenuDefinition def, BeverageBuildSnapshot snapshot)

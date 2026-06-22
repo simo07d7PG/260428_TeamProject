@@ -167,9 +167,13 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         _overCup = over;
 
-        // 붓는 도구는 컵 위에서 기울입니다.
-        if (_rect != null && (kind == BeverageToolKind.Milk || kind == BeverageToolKind.Syrup))
+        // 붓는 도구(우유)는 컵 위에서 기울이고 붓는 소리를 냅니다.
+        if (_rect != null && kind == BeverageToolKind.Milk)
+        {
             _rect.localRotation = Quaternion.Euler(0f, 0f, over ? tiltDegrees : 0f);
+            if (over)
+                AudioManager.PlaySfx("milk_pour");
+        }
     }
 
     void Update()
@@ -177,10 +181,9 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (!_dragging || !_overCup || !CanOperate())
             return;
 
+        // 우유만 홀드하는 동안 천천히 차오릅니다. 나머지는 드롭 시 1씩.
         if (kind == BeverageToolKind.Milk)
             PourMilk();
-        else if (kind == BeverageToolKind.Syrup)
-            DripSyrup();
     }
 
     void PourMilk()
@@ -189,38 +192,36 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             OnResult?.Invoke(message);
     }
 
-    void DripSyrup()
-    {
-        _syrupTimer -= Time.unscaledDeltaTime;
-        if (_syrupTimer > 0f)
-            return;
-
-        _syrupTimer = syrupInterval;
-        if (BeverageBuildManager.Instance.TryAddSyrup(NormAt(_lastScreenPos), out string message))
-            OnResult?.Invoke(message);
-        else
-            OnResult?.Invoke(message);
-    }
-
     void HandleDrop(Vector2 screenPos, Camera cam)
     {
         _cam = cam;
+        bool ok;
         string message;
+        string sfx;
         switch (kind)
         {
-            case BeverageToolKind.Topping:
-                BeverageBuildManager.Instance.TryAddTopping(NormAt(screenPos), out message);
+            case BeverageToolKind.Syrup:
+                ok = BeverageBuildManager.Instance.TryAddSyrup(NormAt(screenPos), out message);
+                sfx = "syrup_drop";
                 break;
-            case BeverageToolKind.Lid:
-                BeverageBuildManager.Instance.TryApplyLid(out message);
+            case BeverageToolKind.Topping:
+                ok = BeverageBuildManager.Instance.TryAddTopping(NormAt(screenPos), out message);
+                sfx = "topping_add";
                 break;
             case BeverageToolKind.Ice:
-                BeverageBuildManager.Instance.TryAddIce(out message);
+                ok = BeverageBuildManager.Instance.TryAddIce(out message);
+                sfx = "ice_add";
+                break;
+            case BeverageToolKind.Lid:
+                ok = BeverageBuildManager.Instance.TryApplyLid(out message);
+                sfx = "lid_close";
                 break;
             default:
-                return; // Milk/Syrup는 컵 위에서 연속 동작으로 처리됨
+                return; // Milk는 컵 위 홀드로 처리됨
         }
 
+        if (ok)
+            AudioManager.PlaySfx(sfx);
         OnResult?.Invoke(message);
     }
 

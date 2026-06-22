@@ -13,6 +13,7 @@ public class CustomerCardUI : MonoBehaviour
 
     [SerializeField] Image background;
     [SerializeField] Image iconImage;
+    [SerializeField] TextMeshProUGUI nameText;
     [SerializeField] TextMeshProUGUI phraseText;
     [SerializeField] Image patienceFill;
     [SerializeField] Button button;
@@ -22,10 +23,11 @@ public class CustomerCardUI : MonoBehaviour
 
     public Customer Customer => _customer;
 
-    public void Bind(Image bg, Image icon, TextMeshProUGUI phrase, Image patience, Button btn)
+    public void Bind(Image bg, Image icon, TextMeshProUGUI name, TextMeshProUGUI phrase, Image patience, Button btn)
     {
         background = bg;
         iconImage = icon;
+        nameText = name;
         phraseText = phrase;
         patienceFill = patience;
         button = btn;
@@ -41,6 +43,9 @@ public class CustomerCardUI : MonoBehaviour
     {
         _customer = customer;
         _onClick = onClick;
+
+        if (nameText != null)
+            nameText.text = UIFontUtility.Sanitize(customer?.Order?.MenuName ?? string.Empty);
 
         if (phraseText != null)
             phraseText.text = UIFontUtility.Sanitize(customer?.Order?.phrase ?? string.Empty);

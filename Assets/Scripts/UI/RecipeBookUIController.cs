@@ -6,12 +6,32 @@ using UnityEngine.UI;
 
 /// <summary>
 /// "레시피" 버튼으로 토글하는 레시피 북입니다.
-/// 현재 일차에 해금된 메뉴(구성·가격)와 머지 레시피(입력→출력)를 동적으로 보여줍니다.
+/// 한 페이지에 레시피 하나(아이콘·제목·제조법 단계·가격/주문 예시)를 보여주고,
+/// «◀ 이전» / «다음 ▶» 버튼과 "현재/전체" 인디케이터로 페이지를 넘깁니다.
 /// </summary>
 public class RecipeBookUIController : MonoBehaviour
 {
+    /// <summary>한 페이지에 표시할 레시피 데이터(메뉴 또는 머지 레시피).</summary>
+    class RecipePage
+    {
+        public string title;
+        public Sprite icon;
+        public List<string> steps;
+        public string footer;
+    }
+
     RectTransform _panel;
-    TextMeshProUGUI _body;
+
+    Image _icon;
+    TextMeshProUGUI _title;
+    TextMeshProUGUI _steps;
+    TextMeshProUGUI _footer;
+    TextMeshProUGUI _indicator;
+    Button _prevButton;
+    Button _nextButton;
+
+    List<RecipePage> _pages = new List<RecipePage>();
+    int _index;
     bool _open;
 
     public static void ConfigureHostTransform(RectTransform host) => UIFactoryUtility.StretchHost(host);
@@ -54,16 +74,8 @@ public class RecipeBookUIController : MonoBehaviour
         panelRect.sizeDelta = new Vector2(640f, 700f);
         panelObject.GetComponent<Image>().color = new Color(0.12f, 0.13f, 0.17f, 1f);
 
-        _body = UIFactoryUtility.CreateLabel(panelRect, "RecipeBody", string.Empty, 18f);
-        _body.alignment = TextAlignmentOptions.TopLeft;
-        _body.enableWordWrapping = true;
-        _body.richText = true;
-        RectTransform bodyRect = _body.rectTransform;
-        bodyRect.anchorMin = Vector2.zero;
-        bodyRect.anchorMax = Vector2.one;
-        bodyRect.pivot = new Vector2(0.5f, 0.5f);
-        bodyRect.offsetMin = new Vector2(28f, 70f);
-        bodyRect.offsetMax = new Vector2(-28f, -24f);
+        BuildPageContent(panelRect);
+        BuildNavigation(panelRect);
 
         Button closeButton = UIFactoryUtility.CreateButton(
             panelRect, "CloseButton", "닫기", new Color(0.25f, 0.45f, 0.75f, 1f));
@@ -76,6 +88,95 @@ public class RecipeBookUIController : MonoBehaviour
         closeButton.onClick.AddListener(() => SetOpen(false));
     }
 
+    /// <summary>아이콘 / 제목 / 단계 / 푸터를 한 페이지 레이아웃으로 배치합니다.</summary>
+    void BuildPageContent(RectTransform panelRect)
+    {
+        // 아이콘: 상단 중앙의 큰 정사각 이미지
+        _icon = UIFactoryUtility.CreateImage(panelRect, "RecipeIcon", Color.white);
+        _icon.raycastTarget = false;
+        _icon.preserveAspect = true;
+        RectTransform iconRect = _icon.rectTransform;
+        iconRect.anchorMin = new Vector2(0.5f, 1f);
+        iconRect.anchorMax = new Vector2(0.5f, 1f);
+        iconRect.pivot = new Vector2(0.5f, 1f);
+        iconRect.anchoredPosition = new Vector2(0f, -40f);
+        iconRect.sizeDelta = new Vector2(180f, 180f);
+
+        // 제목: 아이콘 아래, 굵고 큰 글씨
+        _title = UIFactoryUtility.CreateLabel(panelRect, "RecipeTitle", string.Empty, 30f);
+        _title.alignment = TextAlignmentOptions.Center;
+        _title.fontStyle = FontStyles.Bold;
+        _title.overflowMode = TextOverflowModes.Overflow;
+        RectTransform titleRect = _title.rectTransform;
+        titleRect.anchorMin = new Vector2(0f, 1f);
+        titleRect.anchorMax = new Vector2(1f, 1f);
+        titleRect.pivot = new Vector2(0.5f, 1f);
+        titleRect.offsetMin = new Vector2(28f, 0f);
+        titleRect.offsetMax = new Vector2(-28f, 0f);
+        titleRect.anchoredPosition = new Vector2(0f, -236f);
+        titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, 48f);
+
+        // 제조법 단계: 좌측 정렬, 여러 줄
+        _steps = UIFactoryUtility.CreateLabel(panelRect, "RecipeSteps", string.Empty, 20f);
+        _steps.alignment = TextAlignmentOptions.TopLeft;
+        _steps.enableWordWrapping = true;
+        _steps.richText = true;
+        _steps.overflowMode = TextOverflowModes.Overflow;
+        RectTransform stepsRect = _steps.rectTransform;
+        stepsRect.anchorMin = new Vector2(0f, 0f);
+        stepsRect.anchorMax = new Vector2(1f, 1f);
+        stepsRect.pivot = new Vector2(0.5f, 0.5f);
+        stepsRect.offsetMin = new Vector2(40f, 150f);
+        stepsRect.offsetMax = new Vector2(-40f, -300f);
+
+        // 푸터: 가격 + 주문 예시
+        _footer = UIFactoryUtility.CreateLabel(panelRect, "RecipeFooter", string.Empty, 17f);
+        _footer.alignment = TextAlignmentOptions.Top;
+        _footer.enableWordWrapping = true;
+        _footer.richText = true;
+        _footer.overflowMode = TextOverflowModes.Overflow;
+        RectTransform footerRect = _footer.rectTransform;
+        footerRect.anchorMin = new Vector2(0f, 0f);
+        footerRect.anchorMax = new Vector2(1f, 0f);
+        footerRect.pivot = new Vector2(0.5f, 0f);
+        footerRect.offsetMin = new Vector2(28f, 110f);
+        footerRect.offsetMax = new Vector2(-28f, 0f);
+        footerRect.sizeDelta = new Vector2(footerRect.sizeDelta.x, 70f);
+    }
+
+    /// <summary>이전/다음 버튼과 페이지 인디케이터를 배치합니다.</summary>
+    void BuildNavigation(RectTransform panelRect)
+    {
+        _prevButton = UIFactoryUtility.CreateButton(
+            panelRect, "PrevButton", "◀ 이전", new Color(0.30f, 0.34f, 0.42f, 1f));
+        RectTransform prevRect = _prevButton.GetComponent<RectTransform>();
+        prevRect.anchorMin = new Vector2(0f, 0f);
+        prevRect.anchorMax = new Vector2(0f, 0f);
+        prevRect.pivot = new Vector2(0f, 0f);
+        prevRect.anchoredPosition = new Vector2(28f, 74f);
+        prevRect.sizeDelta = new Vector2(150f, 44f);
+        _prevButton.onClick.AddListener(Prev);
+
+        _nextButton = UIFactoryUtility.CreateButton(
+            panelRect, "NextButton", "다음 ▶", new Color(0.30f, 0.34f, 0.42f, 1f));
+        RectTransform nextRect = _nextButton.GetComponent<RectTransform>();
+        nextRect.anchorMin = new Vector2(1f, 0f);
+        nextRect.anchorMax = new Vector2(1f, 0f);
+        nextRect.pivot = new Vector2(1f, 0f);
+        nextRect.anchoredPosition = new Vector2(-28f, 74f);
+        nextRect.sizeDelta = new Vector2(150f, 44f);
+        _nextButton.onClick.AddListener(Next);
+
+        _indicator = UIFactoryUtility.CreateLabel(panelRect, "PageIndicator", string.Empty, 18f);
+        _indicator.alignment = TextAlignmentOptions.Center;
+        RectTransform indicatorRect = _indicator.rectTransform;
+        indicatorRect.anchorMin = new Vector2(0.5f, 0f);
+        indicatorRect.anchorMax = new Vector2(0.5f, 0f);
+        indicatorRect.pivot = new Vector2(0.5f, 0f);
+        indicatorRect.anchoredPosition = new Vector2(0f, 84f);
+        indicatorRect.sizeDelta = new Vector2(160f, 30f);
+    }
+
     void Toggle() => SetOpen(!_open);
 
     void SetOpen(bool open)
@@ -84,29 +185,91 @@ public class RecipeBookUIController : MonoBehaviour
         if (_panel != null)
             _panel.gameObject.SetActive(open);
 
-        if (open && _body != null)
-            _body.text = UIFontUtility.Sanitize(BuildContent());
+        if (open)
+        {
+            int day = GameManager.Instance != null ? GameManager.Instance.CurrentDay : 1;
+            _pages = BuildPages(day);
+            GoTo(0);
+        }
     }
 
-    string BuildContent()
-    {
-        int day = GameManager.Instance != null ? GameManager.Instance.CurrentDay : 1;
-        StringBuilder sb = new StringBuilder();
+    void Prev() => GoTo(_index - 1);
 
-        sb.AppendLine("<b>[ 아는 레시피 ]</b>");
-        sb.AppendLine();
+    void Next() => GoTo(_index + 1);
+
+    /// <summary>지정 인덱스 페이지를 렌더링합니다. 경계는 Clamp 처리(순환 없음).</summary>
+    void GoTo(int index)
+    {
+        if (_pages == null || _pages.Count == 0)
+        {
+            _index = 0;
+            if (_icon != null)
+            {
+                _icon.sprite = null;
+                _icon.enabled = false;
+            }
+            if (_title != null)
+                _title.text = UIFontUtility.Sanitize("표시할 레시피가 없습니다");
+            if (_steps != null)
+                _steps.text = string.Empty;
+            if (_footer != null)
+                _footer.text = string.Empty;
+            if (_indicator != null)
+                _indicator.text = UIFontUtility.Sanitize("0 / 0");
+            if (_prevButton != null)
+                _prevButton.interactable = false;
+            if (_nextButton != null)
+                _nextButton.interactable = false;
+            return;
+        }
+
+        _index = Mathf.Clamp(index, 0, _pages.Count - 1);
+        RecipePage page = _pages[_index];
+
+        if (_icon != null)
+        {
+            _icon.enabled = page.icon != null;
+            _icon.sprite = page.icon;
+        }
+        if (_title != null)
+            _title.text = UIFontUtility.Sanitize(page.title);
+        if (_steps != null)
+            _steps.text = UIFontUtility.Sanitize(BuildStepsText(page.steps));
+        if (_footer != null)
+            _footer.text = UIFontUtility.Sanitize(page.footer);
+        if (_indicator != null)
+            _indicator.text = UIFontUtility.Sanitize($"{_index + 1} / {_pages.Count}");
+
+        if (_prevButton != null)
+            _prevButton.interactable = _index > 0;
+        if (_nextButton != null)
+            _nextButton.interactable = _index < _pages.Count - 1;
+    }
+
+    // ---------------------------------------------------------------------
+    // 페이지 모델 빌드
+    // ---------------------------------------------------------------------
+
+    /// <summary>현재 일차 기준 메뉴 페이지 + 머지 레시피 페이지를 차례로 구성합니다.</summary>
+    List<RecipePage> BuildPages(int day)
+    {
+        List<RecipePage> pages = new List<RecipePage>();
 
         List<MenuDefinition> menus = MenuCatalog.BuildCatalog(day);
-        sb.AppendLine($"<b>▶ 메뉴 ({menus.Count}종)</b>");
-        foreach (MenuDefinition menu in menus)
+        foreach (MenuDefinition def in menus)
         {
-            if (menu != null)
-                sb.AppendLine($"- {menu.menuName}: {Composition(menu)}  ({menu.basePrice} Coin)");
-        }
-        sb.AppendLine();
+            if (def == null)
+                continue;
 
-        sb.AppendLine("<b>▶ 머지 레시피 (해금)</b>");
-        bool any = false;
+            pages.Add(new RecipePage
+            {
+                title = def.menuName,
+                icon = def.icon,
+                steps = BuildSteps(def),
+                footer = BuildMenuFooter(def)
+            });
+        }
+
         if (DataManager.Instance != null)
         {
             foreach (MergeRecipeSO recipe in DataManager.Instance.GetUnlockedRecipes(day))
@@ -114,34 +277,108 @@ public class RecipeBookUIController : MonoBehaviour
                 if (recipe == null || recipe.outputIngredient == null)
                     continue;
 
-                string inputName = recipe.inputIngredients != null && recipe.inputIngredients.Length > 0
-                    && recipe.inputIngredients[0] != null
-                    ? recipe.inputIngredients[0].ingredientName
-                    : "재료";
-                sb.AppendLine($"- {inputName} x2 > {recipe.outputIngredient.ingredientName} (Lv{recipe.outputLevel})");
-                any = true;
+                pages.Add(BuildMergePage(recipe));
             }
         }
-        if (!any)
-            sb.AppendLine("- (아직 해금된 머지 레시피가 없습니다)");
+
+        return pages;
+    }
+
+    /// <summary>StationType 순서를 따라 한국어 제조법 단계를 생성합니다. (번호는 1부터 재부여)</summary>
+    List<string> BuildSteps(MenuDefinition def)
+    {
+        List<string> raw = new List<string>();
+
+        raw.Add("컵을 준비한다");
+
+        if (def.requiredShots > 0)
+            raw.Add($"에스프레소 {def.requiredShots}샷을 추출한다");
+
+        if (def.milkAmount > 0.05f)
+            raw.Add($"스팀밀크를 {(def.milkAmount >= 0.6f ? "가득" : "적당히")} 채운다");
+
+        if (def.syrupCount > 0)
+            raw.Add($"시럽을 {def.syrupCount}회 넣는다");
+
+        if (def.toppingCount > 0)
+            raw.Add(HasTag(def.specialTags, "휘핑") ? "휘핑 크림을 올린다" : "토핑을 올린다");
+
+        if (def.requiresIce)
+            raw.Add("얼음을 넣는다");
+
+        raw.Add("리드를 덮어 서빙한다");
+
+        List<string> numbered = new List<string>(raw.Count);
+        for (int i = 0; i < raw.Count; i++)
+            numbered.Add($"{i + 1}. {raw[i]}");
+
+        return numbered;
+    }
+
+    string BuildMenuFooter(MenuDefinition def)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.Append($"<b>가격</b>  {def.basePrice} Coin");
+
+        if (def.orderPhrases != null && def.orderPhrases.Length > 0
+            && !string.IsNullOrEmpty(def.orderPhrases[0]))
+        {
+            sb.AppendLine();
+            sb.Append($"<b>주문 예시</b>  \"{def.orderPhrases[0]}\"");
+        }
 
         return sb.ToString();
     }
 
-    static string Composition(MenuDefinition menu)
+    RecipePage BuildMergePage(MergeRecipeSO recipe)
     {
-        List<string> parts = new List<string>();
-        if (menu.requiredShots > 0)
-            parts.Add($"샷{menu.requiredShots}");
-        if (menu.milkAmount > 0.05f)
-            parts.Add(menu.milkAmount >= 0.6f ? "밀크많이" : "밀크");
-        if (menu.syrupCount > 0)
-            parts.Add($"시럽{menu.syrupCount}");
-        if (menu.toppingCount > 0)
-            parts.Add("토핑");
-        if (menu.requiresIce)
-            parts.Add("아이스");
+        string inputName = recipe.inputIngredients != null && recipe.inputIngredients.Length > 0
+            && recipe.inputIngredients[0] != null
+            ? recipe.inputIngredients[0].ingredientName
+            : "재료";
+        string outputName = recipe.outputIngredient.ingredientName;
 
-        return parts.Count > 0 ? string.Join(" / ", parts) : "-";
+        List<string> steps = new List<string>
+        {
+            $"1. 동일한 {inputName} 2개를 준비한다",
+            $"2. 두 재료를 합친다 → {outputName} Lv{recipe.outputLevel}"
+        };
+
+        string footer = string.IsNullOrEmpty(recipe.effectDescription)
+            ? "<b>재료 합성</b>"
+            : $"<b>효과</b>  {recipe.effectDescription}";
+
+        return new RecipePage
+        {
+            title = $"재료 합성: {outputName}",
+            icon = ProceduralIconUtility.GetIngredientIcon(recipe.outputIngredient),
+            steps = steps,
+            footer = footer
+        };
+    }
+
+    static string BuildStepsText(List<string> steps)
+    {
+        if (steps == null || steps.Count == 0)
+            return string.Empty;
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("<b>[ 제조법 ]</b>");
+        for (int i = 0; i < steps.Count; i++)
+            sb.AppendLine(steps[i]);
+        return sb.ToString();
+    }
+
+    static bool HasTag(string[] tags, string tag)
+    {
+        if (tags == null)
+            return false;
+
+        foreach (string t in tags)
+        {
+            if (t == tag)
+                return true;
+        }
+        return false;
     }
 }

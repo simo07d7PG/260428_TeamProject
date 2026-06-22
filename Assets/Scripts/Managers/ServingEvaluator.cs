@@ -6,7 +6,9 @@ using UnityEngine;
 /// </summary>
 public static class ServingEvaluator
 {
-    public const float CorrectMenuThreshold = 0.55f;
+    // 주문과 '다른 음료'면 완성도가 높아도 돈을 주지 않도록 임계를 높게 둡니다.
+    // (음료 종류 일치가 지급의 1차 관문 — 완성도보다 우선)
+    public const float CorrectMenuThreshold = 0.72f;
     public const float ExactScoreThreshold = 0.82f;
 
     public static ServingScoreBreakdown Evaluate(CustomerOrder order, BeverageBuildSnapshot snapshot, float patienceRatio)

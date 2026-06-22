@@ -187,8 +187,8 @@ Canvas:
   m_GameObject: {fileID: 37078415}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
+  m_RenderMode: 1
+  m_Camera: {fileID: 354465573}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -488,7 +488,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.15}
   m_AnchorMax: {x: 0.5, y: 0.15}
-  m_AnchoredPosition: {x: -210, y: 0}
+  m_AnchoredPosition: {x: -507, y: 0}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &146613791
@@ -779,6 +779,7 @@ GameObject:
   - component: {fileID: 354465573}
   - component: {fileID: 354465572}
   - component: {fileID: 354465575}
+  - component: {fileID: 354465576}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -803,8 +804,8 @@ Camera:
   m_GameObject: {fileID: 354465571}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.1509434, g: 0.1509434, b: 0.1509434, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -883,7 +884,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0
@@ -904,6 +905,23 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &354465576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 354465571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 47a2581b7633f36499e9871f22e8ba7a, type: 2}
 --- !u!1 &393432355
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,6 +1151,7 @@ GameObject:
   - component: {fileID: 443447223}
   - component: {fileID: 443447226}
   - component: {fileID: 443447227}
+  - component: {fileID: 443447228}
   m_Layer: 0
   m_Name: Managers
   m_TagString: Untagged
@@ -1168,6 +1187,7 @@ MonoBehaviour:
   CurrentDay: 1
   Coin: 0
   loadOnStart: 0
+  newGameCoin: 500
 --- !u!4 &443447225
 Transform:
   m_ObjectHideFlags: 0
@@ -1216,6 +1236,40 @@ MonoBehaviour:
   level1SuccessBonus: 15
   level2SuccessBonus: 25
   level2PayoutBonus: 1.5
+--- !u!114 &443447228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 443447222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c58478545b81548b704eedebc32d03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CafeAssetConfig
+  counter: {fileID: 4335755401495015786, guid: 6fb962f775980fe42a389cd6121248a3, type: 3}
+  cup: {fileID: 0}
+  espressoMachine: {fileID: 21300000, guid: e1c729d63cb078a45afe71973719ca73, type: 3}
+  milk: {fileID: -5110731548806032159, guid: e24c2678f127e7a40bd24f5dd12697fb, type: 3}
+  syrup: {fileID: 0}
+  topping: {fileID: 3567718813852447307, guid: 27ad663ecec4748489423833050fcf89, type: 3}
+  ice: {fileID: 0}
+  gaugeOffset: {x: 0, y: 30}
+  cupTake: {fileID: 0}
+  cupPlace: {fileID: 0}
+  shotExtract: {fileID: 0}
+  milkPour: {fileID: 0}
+  syrupDrop: {fileID: 0}
+  toppingAdd: {fileID: 0}
+  iceAdd: {fileID: 0}
+  lidClose: {fileID: 0}
+  coin: {fileID: 0}
+  serveFail: {fileID: 0}
+  mergeSuccess: {fileID: 0}
+  customerArrive: {fileID: 0}
+  customerLeave: {fileID: 0}
+  drinkComplete: {fileID: 0}
 --- !u!1 &542404821
 GameObject:
   m_ObjectHideFlags: 0
@@ -1606,7 +1660,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.92}
   m_AnchorMax: {x: 0.5, y: 0.92}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -297, y: 0}
   m_SizeDelta: {x: 700, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &596508125
@@ -1700,7 +1754,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.15}
   m_AnchorMax: {x: 0.5, y: 0.15}
-  m_AnchoredPosition: {x: 210, y: 0}
+  m_AnchoredPosition: {x: -87, y: 0}
   m_SizeDelta: {x: 400, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &612177743
@@ -5061,7 +5115,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.55}
   m_AnchorMax: {x: 0.5, y: 0.55}
-  m_AnchoredPosition: {x: 0, y: -54}
+  m_AnchoredPosition: {x: -297, y: -54}
   m_SizeDelta: {x: 450, y: 450}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2103942894
