@@ -11,9 +11,29 @@ public class Customer
     public float CurrentPatience = 50f;
     public CustomerState State = CustomerState.Waiting;
 
+    /// <summary>표시할 손님 캐릭터 변형 인덱스(스폰 시 무작위 배정).</summary>
+    public int CharacterIndex;
+
     public float PatienceRatio => MaxPatience > 0f ? Mathf.Clamp01(CurrentPatience / MaxPatience) : 0f;
 
     public bool IsActive => State == CustomerState.Waiting || State == CustomerState.Building;
+
+    /// <summary>상태·인내심으로 파생되는 표정. 표정 스프라이트 선택에 사용합니다.</summary>
+    public CustomerMood Mood
+    {
+        get
+        {
+            if (State == CustomerState.Served)
+                return CustomerMood.Happy;
+            if (State == CustomerState.Left)
+                return CustomerMood.Angry;
+            if (PatienceRatio <= 0.25f)
+                return CustomerMood.Angry;
+            if (PatienceRatio >= 0.7f)
+                return CustomerMood.Happy;
+            return CustomerMood.Neutral;
+        }
+    }
 
     public Customer(int id, CustomerOrder order, float maxPatience)
     {
@@ -33,4 +53,12 @@ public class Customer
         CurrentPatience = Mathf.Max(0f, CurrentPatience - deltaSeconds);
         return CurrentPatience <= 0f;
     }
+}
+
+/// <summary>손님 표정 상태.</summary>
+public enum CustomerMood
+{
+    Happy,
+    Neutral,
+    Angry
 }

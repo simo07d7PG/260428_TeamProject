@@ -14,9 +14,47 @@ public static class CafeSpriteUtility
 
     public static Sprite Station(string name)
     {
-        // 인스펙터(CafeAssetConfig) 지정이 최우선, 없으면 Resources.
+        // 인스펙터(CafeAssetConfig) 지정 → Resources 다중 경로 → null(색 폴백).
         Sprite configured = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.GetStationSprite(name) : null;
-        return configured != null ? configured : Load($"Sprites/Stations/{name}");
+        if (configured != null)
+            return configured;
+
+        foreach (string path in ResourcePaths(name))
+        {
+            Sprite sprite = Load(path);
+            if (sprite != null)
+                return sprite;
+        }
+
+        return null;
+    }
+
+    // 스테이션 이름 → 실제 Resources 경로 후보(이미 만들어 둔 Coffee/·Ingredients/ 에셋을 살림).
+    static IEnumerable<string> ResourcePaths(string name)
+    {
+        yield return $"Sprites/Stations/{name}";
+
+        switch (name)
+        {
+            case "Cup":
+                yield return "Ingredients/cup";
+                break;
+            case "EspressoShot":
+                yield return "Coffee/CoffeeMachine0";
+                yield return "Coffee/CoffeeMachine1";
+                break;
+            case "Milk":
+            case "SteamMilk":
+                yield return "Ingredients/milk";
+                break;
+            case "Syrup":
+                yield return "Ingredients/syrup";
+                break;
+            case "Topping":
+                yield return "Ingredients/cream";
+                yield return "Ingredients/chocolatechips";
+                break;
+        }
     }
 
     public static Sprite Cup(string name) => Load($"Sprites/Cup/{name}");

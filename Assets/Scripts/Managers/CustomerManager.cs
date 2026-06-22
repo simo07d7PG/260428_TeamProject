@@ -179,6 +179,11 @@ public class CustomerManager : MonoBehaviour
         float patience = UnityEngine.Random.Range(patienceMin, patienceMax);
         Customer customer = new Customer(_nextId++, order, patience);
 
+        int variants = CafeAssetConfig.Instance != null && CafeAssetConfig.Instance.CustomerVariantCount > 0
+            ? CafeAssetConfig.Instance.CustomerVariantCount
+            : 3; // Resources/Characters/NPCBody1~3 기준
+        customer.CharacterIndex = UnityEngine.Random.Range(0, variants);
+
         _queue.Add(customer);
         _spawnedCount++;
 

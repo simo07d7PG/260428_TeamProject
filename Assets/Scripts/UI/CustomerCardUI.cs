@@ -13,6 +13,8 @@ public class CustomerCardUI : MonoBehaviour
 
     [SerializeField] Image background;
     [SerializeField] Image iconImage;
+    [SerializeField] Image headImage;
+    [SerializeField] Image faceImage;
     [SerializeField] TextMeshProUGUI nameText;
     [SerializeField] TextMeshProUGUI phraseText;
     [SerializeField] Image patienceFill;
@@ -20,13 +22,16 @@ public class CustomerCardUI : MonoBehaviour
 
     Customer _customer;
     Action<Customer> _onClick;
+    CustomerMood _lastMood = (CustomerMood)(-1);
 
     public Customer Customer => _customer;
 
-    public void Bind(Image bg, Image icon, TextMeshProUGUI name, TextMeshProUGUI phrase, Image patience, Button btn)
+    public void Bind(Image bg, Image icon, Image head, Image face, TextMeshProUGUI name, TextMeshProUGUI phrase, Image patience, Button btn)
     {
         background = bg;
         iconImage = icon;
+        headImage = head;
+        faceImage = face;
         nameText = name;
         phraseText = phrase;
         patienceFill = patience;
@@ -43,6 +48,7 @@ public class CustomerCardUI : MonoBehaviour
     {
         _customer = customer;
         _onClick = onClick;
+        _lastMood = (CustomerMood)(-1);
 
         if (nameText != null)
             nameText.text = UIFontUtility.Sanitize(customer?.Order?.MenuName ?? string.Empty);
@@ -57,7 +63,37 @@ public class CustomerCardUI : MonoBehaviour
             iconImage.enabled = icon != null;
         }
 
+        // 손님 캐릭터 머리(변형별). 표정은 Refresh에서 인내심/상태에 따라 갱신.
+        if (headImage != null)
+        {
+            Sprite head = ResolveHead(customer != null ? customer.CharacterIndex : 0);
+            headImage.sprite = head;
+            headImage.enabled = head != null;
+        }
+
         Refresh(false);
+    }
+
+    static Sprite ResolveHead(int index)
+    {
+        Sprite sprite = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.GetCustomerHead(index) : null;
+        if (sprite == null)
+            sprite = Resources.Load<Sprite>($"Characters/NPCHead/NPC{index + 1}_head");
+        return sprite;
+    }
+
+    static Sprite ResolveFace(CustomerMood mood)
+    {
+        CafeAssetConfig cfg = CafeAssetConfig.Instance;
+        Sprite sprite = cfg != null
+            ? (mood == CustomerMood.Happy ? cfg.FaceHappy : mood == CustomerMood.Angry ? cfg.FaceAngry : cfg.FaceDefault)
+            : null;
+        if (sprite == null)
+        {
+            string file = mood == CustomerMood.Happy ? "happy" : mood == CustomerMood.Angry ? "angry" : "default";
+            sprite = Resources.Load<Sprite>($"Characters/Face/{file}");
+        }
+        return sprite;
     }
 
     public void Refresh(bool selected)
@@ -69,11 +105,20 @@ public class CustomerCardUI : MonoBehaviour
         {
             float ratio = _customer.PatienceRatio;
             patienceFill.fillAmount = ratio;
-            patienceFill.color = ratio > 0.5f
-                ? new Color(0.35f, 0.8f, 0.4f, 1f)
-                : ratio > 0.25f
-                    ? new Color(0.95f, 0.8f, 0.3f, 1f)
-                    : new Color(0.9f, 0.35f, 0.3f, 1f);
+            patienceFill.color = CafeTheme.PatienceColor(ratio);
+        }
+
+        // 표정: 상태/인내심에 따라 변경(머리 위에 오버레이). 변할 때만 교체.
+        if (faceImage != null)
+        {
+            CustomerMood mood = _customer.Mood;
+            if (mood != _lastMood)
+            {
+                _lastMood = mood;
+                Sprite face = ResolveFace(mood);
+                faceImage.sprite = face;
+                faceImage.enabled = face != null;
+            }
         }
 
         if (background != null)

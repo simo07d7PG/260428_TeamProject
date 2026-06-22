@@ -9,11 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 public class CupCanvasUI : MonoBehaviour
 {
-    static readonly Color EspressoColor = new(0.30f, 0.18f, 0.10f, 1f);
-    static readonly Color MilkColor = new(0.96f, 0.93f, 0.84f, 1f);
-    static readonly Color SyrupColor = new(0.55f, 0.33f, 0.10f, 1f);
-    static readonly Color ToppingColor = new(0.99f, 0.98f, 0.96f, 1f);
-
+    // 음료 레이어 색은 CafeTheme(인스펙터 CafeAssetConfig 오버라이드 → 기본값)에서 가져옵니다.
     [SerializeField] RectTransform liquidArea;   // 컵 내부 액체 영역 (마스크됨)
     [SerializeField] RectTransform decorArea;     // 방울/토핑 배치 영역 (컵 전체)
     [SerializeField] Image espressoFill;
@@ -56,12 +52,12 @@ public class CupCanvasUI : MonoBehaviour
             : 0f;
         float milkFraction = Mathf.Clamp01(snapshot.MilkAmount) * 0.62f;
 
-        ApplyFill(espressoFill, area * espressoFraction, 0f, EspressoColor, espressoFraction > 0f);
-        ApplyFill(milkFill, area * milkFraction, area * espressoFraction, MilkColor, milkFraction > 0f);
+        ApplyFill(espressoFill, area * espressoFraction, 0f, CafeTheme.Espresso, espressoFraction > 0f);
+        ApplyFill(milkFill, area * milkFraction, area * espressoFraction, CafeTheme.Milk, milkFraction > 0f);
 
         _activeDrops = 0;
-        RenderPoints(snapshot.GetLayer(StationType.Syrup), SyrupColor, 14f);
-        RenderPoints(snapshot.GetLayer(StationType.Topping), ToppingColor, 30f);
+        RenderPoints(snapshot.GetLayer(StationType.Syrup), CafeTheme.Syrup, 14f);
+        RenderPoints(snapshot.GetLayer(StationType.Topping), CafeTheme.Topping, 30f);
         HideUnusedDrops();
 
         if (lidImage != null)

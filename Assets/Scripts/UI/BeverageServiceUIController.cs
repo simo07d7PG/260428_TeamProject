@@ -225,11 +225,7 @@ public class BeverageServiceUIController : MonoBehaviour
 
         float ratio = customer.PatienceRatio;
         _refs.orderPatienceFill.fillAmount = ratio;
-        _refs.orderPatienceFill.color = ratio > 0.5f
-            ? new Color(0.35f, 0.8f, 0.4f, 1f)
-            : ratio > 0.25f
-                ? new Color(0.95f, 0.8f, 0.3f, 1f)
-                : new Color(0.9f, 0.35f, 0.3f, 1f);
+        _refs.orderPatienceFill.color = CafeTheme.PatienceColor(ratio);
     }
 
     void RefreshMachineLabel(BeverageBuildSnapshot snapshot)

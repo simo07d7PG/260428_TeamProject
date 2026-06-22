@@ -139,13 +139,34 @@ public class CustomerQueueUIController : MonoBehaviour
         Image background = cardObject.GetComponent<Image>();
         background.color = new Color(0.16f, 0.18f, 0.22f, 0.96f);
 
+        // 손님 캐릭터 머리(좌측 아바타) + 표정 오버레이(머리 위)
+        Image head = UIFactoryUtility.CreateImage(cardRect, "Head", Color.white);
+        RectTransform headRect = head.rectTransform;
+        headRect.anchorMin = headRect.anchorMax = new Vector2(0f, 0.5f);
+        headRect.pivot = new Vector2(0f, 0.5f);
+        headRect.anchoredPosition = new Vector2(8f, 0f);
+        headRect.sizeDelta = new Vector2(62f, 62f);
+        head.preserveAspect = true;
+        head.raycastTarget = false;
+        head.enabled = false;
+
+        Image face = UIFactoryUtility.CreateImage(cardRect, "Face", Color.white);
+        RectTransform faceRect = face.rectTransform;
+        faceRect.anchorMin = faceRect.anchorMax = new Vector2(0f, 0.5f);
+        faceRect.pivot = new Vector2(0f, 0.5f);
+        faceRect.anchoredPosition = new Vector2(8f, 0f);
+        faceRect.sizeDelta = new Vector2(62f, 62f);
+        face.preserveAspect = true;
+        face.raycastTarget = false;
+        face.enabled = false;
+
+        // 주문 음료 아이콘(우측 작은 배지)
         Image icon = UIFactoryUtility.CreateImage(cardRect, "Icon", Color.white);
         RectTransform iconRect = icon.rectTransform;
-        iconRect.anchorMin = new Vector2(0f, 0.5f);
-        iconRect.anchorMax = new Vector2(0f, 0.5f);
-        iconRect.pivot = new Vector2(0f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(10f, 8f);
-        iconRect.sizeDelta = new Vector2(56f, 56f);
+        iconRect.anchorMin = iconRect.anchorMax = new Vector2(1f, 0.5f);
+        iconRect.pivot = new Vector2(1f, 0.5f);
+        iconRect.anchoredPosition = new Vector2(-8f, 8f);
+        iconRect.sizeDelta = new Vector2(40f, 40f);
         icon.preserveAspect = true;
         icon.raycastTarget = false;
         icon.enabled = false;
@@ -157,8 +178,8 @@ public class CustomerQueueUIController : MonoBehaviour
         nameRect.anchorMin = new Vector2(0f, 1f);
         nameRect.anchorMax = new Vector2(1f, 1f);
         nameRect.pivot = new Vector2(0f, 1f);
-        nameRect.offsetMin = new Vector2(74f, -34f);
-        nameRect.offsetMax = new Vector2(-8f, -6f);
+        nameRect.offsetMin = new Vector2(78f, -34f);
+        nameRect.offsetMax = new Vector2(-52f, -6f);
 
         TextMeshProUGUI phrase = UIFactoryUtility.CreateLabel(cardRect, "PhraseText", string.Empty, 13f);
         phrase.alignment = TextAlignmentOptions.MidlineLeft;
@@ -167,8 +188,8 @@ public class CustomerQueueUIController : MonoBehaviour
         phraseRect.anchorMin = new Vector2(0f, 1f);
         phraseRect.anchorMax = new Vector2(1f, 1f);
         phraseRect.pivot = new Vector2(0f, 1f);
-        phraseRect.offsetMin = new Vector2(74f, -56f);
-        phraseRect.offsetMax = new Vector2(-8f, -36f);
+        phraseRect.offsetMin = new Vector2(78f, -56f);
+        phraseRect.offsetMax = new Vector2(-52f, -36f);
 
         Image patienceFill = UIFactoryUtility.CreateFilledBar(
             cardRect, "PatienceBar",
@@ -178,11 +199,11 @@ public class CustomerQueueUIController : MonoBehaviour
         barRect.anchorMin = new Vector2(0f, 0f);
         barRect.anchorMax = new Vector2(1f, 0f);
         barRect.pivot = new Vector2(0.5f, 0f);
-        barRect.offsetMin = new Vector2(74f, 12f);
-        barRect.offsetMax = new Vector2(-8f, 26f);
+        barRect.offsetMin = new Vector2(78f, 12f);
+        barRect.offsetMax = new Vector2(-52f, 26f);
 
         CustomerCardUI card = cardObject.GetComponent<CustomerCardUI>();
-        card.Bind(background, icon, name, phrase, patienceFill, cardObject.GetComponent<Button>());
+        card.Bind(background, icon, head, face, name, phrase, patienceFill, cardObject.GetComponent<Button>());
         return card;
     }
 

@@ -53,14 +53,29 @@ public static class UIFactoryUtility
 
     public static Button CreateButton(RectTransform parent, string name, string label, Color color)
     {
-        GameObject buttonObject = CreateUIObject(name, parent, typeof(Image), typeof(Button));
-        buttonObject.GetComponent<Image>().color = color;
+        GameObject buttonObject = CreateUIObject(name, parent, typeof(Image), typeof(Button), typeof(UIClickSound));
+        Image image = buttonObject.GetComponent<Image>();
+        image.color = color;
+
+        // 호버/프레스/비활성 트랜지션을 모든 버튼에 일관 적용.
+        Button button = buttonObject.GetComponent<Button>();
+        button.transition = Selectable.Transition.ColorTint;
+        button.targetGraphic = image;
+        ColorBlock cb = button.colors;
+        cb.normalColor = Color.white;
+        cb.highlightedColor = new Color(1.18f, 1.18f, 1.18f, 1f); // 호버 시 밝게
+        cb.pressedColor = new Color(0.82f, 0.82f, 0.82f, 1f);      // 누를 때 어둡게
+        cb.selectedColor = Color.white;
+        cb.disabledColor = new Color(0.55f, 0.55f, 0.55f, 0.6f);
+        cb.colorMultiplier = 1f;
+        cb.fadeDuration = 0.08f;
+        button.colors = cb;
 
         TextMeshProUGUI labelText = CreateLabel(buttonObject.GetComponent<RectTransform>(), "Label", label, 16f);
         StretchFull(labelText.rectTransform);
         labelText.alignment = TextAlignmentOptions.Center;
 
-        return buttonObject.GetComponent<Button>();
+        return button;
     }
 
     public static Image CreateFilledBar(RectTransform parent, string name, Color backColor, Color fillColor)

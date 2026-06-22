@@ -63,7 +63,19 @@ public static class BeverageUIPanelFactory
         GameObject panelObject = CreateUIObject(PanelName, hostRoot, typeof(Image));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
         StretchFull(panelRect);
-        CafeSpriteUtility.ApplyStation(panelObject.GetComponent<Image>(), "Counter", new Color(0.12f, 0.10f, 0.09f, 0.97f));
+        Image panelImage = panelObject.GetComponent<Image>();
+        // 인스펙터로 지정한 영업 배경이 있으면 전체화면 배경으로, 없으면 카운터 스프라이트/색 폴백.
+        Sprite background = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.ServiceBackground : null;
+        if (background != null)
+        {
+            panelImage.sprite = background;
+            panelImage.color = Color.white;
+            panelImage.type = Image.Type.Simple;
+        }
+        else
+        {
+            CafeSpriteUtility.ApplyStation(panelImage, "Counter", new Color(0.12f, 0.10f, 0.09f, 0.97f));
+        }
 
         BeverageUIRefs refs = new BeverageUIRefs
         {

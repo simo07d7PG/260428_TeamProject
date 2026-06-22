@@ -44,6 +44,113 @@ public class CafeAssetConfig : MonoBehaviour
     [SerializeField] AudioClip customerLeave;
     [SerializeField] AudioClip drinkComplete;
 
+    [Header("음악(BGM) — 미지정 시 Resources/Bgm/MP_Background 폴백")]
+    [SerializeField] AudioClip bgm;
+    [SerializeField, Range(0f, 1f)] float bgmVolume = 0.45f;
+
+    [Header("손님 캐릭터 — 미지정 시 Resources/Characters 폴백")]
+    [SerializeField] Sprite[] customerBodies;
+    [SerializeField] Sprite[] customerHeads;
+    [SerializeField] Sprite faceHappy;
+    [SerializeField] Sprite faceDefault;
+    [SerializeField] Sprite faceAngry;
+
+    [Header("배경 — 미지정 시 단색 폴백")]
+    [SerializeField] Sprite serviceBackground;
+    [SerializeField] Sprite mainMenuBackground;
+
+    [Header("메뉴 / 재료 아이콘 — 미지정 시 SO.icon / 절차적 폴백")]
+    [SerializeField] MenuIconEntry[] menuIcons;
+    [SerializeField] IngredientIconEntry[] ingredientIcons;
+
+    [Header("음료 레이어 색 — 알파 0이면 기본값 사용")]
+    [SerializeField] Color espressoColor;
+    [SerializeField] Color milkColor;
+    [SerializeField] Color syrupColor;
+    [SerializeField] Color toppingColor;
+    [SerializeField] Color iceColor;
+
+    [Header("UI 테마색 — 알파 0이면 기본값 사용")]
+    [SerializeField] Color panelColor;
+    [SerializeField] Color primaryButtonColor;
+    [SerializeField] Color successButtonColor;
+    [SerializeField] Color dangerButtonColor;
+    [SerializeField] Color patienceHighColor;
+    [SerializeField] Color patienceMidColor;
+    [SerializeField] Color patienceLowColor;
+
+    // --- 접근자 -------------------------------------------------------------
+    public AudioClip Bgm => bgm;
+    public float BgmVolume => bgmVolume;
+    public Sprite ServiceBackground => serviceBackground;
+    public Sprite MainMenuBackground => mainMenuBackground;
+
+    public Sprite FaceHappy => faceHappy;
+    public Sprite FaceDefault => faceDefault;
+    public Sprite FaceAngry => faceAngry;
+    public int CustomerVariantCount => Mathf.Max(
+        customerBodies != null ? customerBodies.Length : 0,
+        customerHeads != null ? customerHeads.Length : 0);
+
+    public Color EspressoColor => espressoColor;
+    public Color MilkColor => milkColor;
+    public Color SyrupColor => syrupColor;
+    public Color ToppingColor => toppingColor;
+    public Color IceColor => iceColor;
+
+    public Color PanelColor => panelColor;
+    public Color PrimaryButtonColor => primaryButtonColor;
+    public Color SuccessButtonColor => successButtonColor;
+    public Color DangerButtonColor => dangerButtonColor;
+    public Color PatienceHighColor => patienceHighColor;
+    public Color PatienceMidColor => patienceMidColor;
+    public Color PatienceLowColor => patienceLowColor;
+
+    public Sprite GetCustomerBody(int index) => Pick(customerBodies, index);
+    public Sprite GetCustomerHead(int index) => Pick(customerHeads, index);
+
+    static Sprite Pick(Sprite[] arr, int index)
+    {
+        if (arr == null || arr.Length == 0)
+            return null;
+        int i = ((index % arr.Length) + arr.Length) % arr.Length;
+        return arr[i];
+    }
+
+    public Sprite GetMenuIcon(string menuName)
+    {
+        if (menuIcons == null || string.IsNullOrEmpty(menuName))
+            return null;
+        foreach (MenuIconEntry e in menuIcons)
+            if (e.icon != null && e.menuName == menuName)
+                return e.icon;
+        return null;
+    }
+
+    public Sprite GetIngredientIcon(IngredientType type)
+    {
+        if (ingredientIcons == null)
+            return null;
+        foreach (IngredientIconEntry e in ingredientIcons)
+            if (e.icon != null && e.type == type)
+                return e.icon;
+        return null;
+    }
+
+    [System.Serializable]
+    public struct MenuIconEntry
+    {
+        public string menuName;
+        public Sprite icon;
+    }
+
+    [System.Serializable]
+    public struct IngredientIconEntry
+    {
+        public IngredientType type;
+        public Sprite icon;
+    }
+
     void Awake()
     {
         Instance = this;

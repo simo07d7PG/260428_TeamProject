@@ -14,6 +14,7 @@ public class AudioManager : MonoBehaviour
 
     readonly Dictionary<string, AudioClip> _cache = new();
     AudioSource _source;
+    AudioSource _bgmSource;
     bool _subscribed;
 
     void Awake()
@@ -28,11 +29,35 @@ public class AudioManager : MonoBehaviour
         _source = ManagerUtility.GetOrAddComponent<AudioSource>(gameObject);
         _source.playOnAwake = false;
         _source.spatialBlend = 0f;
+
+        _bgmSource = gameObject.AddComponent<AudioSource>();
+        _bgmSource.playOnAwake = false;
+        _bgmSource.loop = true;
+        _bgmSource.spatialBlend = 0f;
     }
 
     void Start()
     {
         Subscribe();
+        PlayBgm();
+    }
+
+    /// <summary>BGM을 루프 재생합니다. 인스펙터(CafeAssetConfig.Bgm) → Resources/Bgm/MP_Background 폴백.</summary>
+    void PlayBgm()
+    {
+        if (_bgmSource == null)
+            return;
+
+        AudioClip clip = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.Bgm : null;
+        if (clip == null)
+            clip = Resources.Load<AudioClip>("Bgm/MP_Background");
+        if (clip == null)
+            return;
+
+        _bgmSource.clip = clip;
+        _bgmSource.volume = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.BgmVolume : 0.45f;
+        if (!_bgmSource.isPlaying)
+            _bgmSource.Play();
     }
 
     void OnDestroy()
@@ -68,9 +93,32 @@ public class AudioManager : MonoBehaviour
             return cached;
 
         AudioClip clip = Resources.Load<AudioClip>($"Audio/{key}");
+        if (clip == null)
+        {
+            // 이미 존재하는 Resources/Bgm/* 효과음 에셋을 키에 매핑해 살립니다.
+            string bgmFile = MapToBgmFile(key);
+            if (bgmFile != null)
+                clip = Resources.Load<AudioClip>($"Bgm/{bgmFile}");
+        }
         if (clip == null) clip = ProceduralAudioUtility.Get(key);
         _cache[key] = clip;
         return clip;
+    }
+
+    static string MapToBgmFile(string key)
+    {
+        return key switch
+        {
+            "shot_extract" => "CoffeeMachineSound",
+            "coin" => "SuccessSound",
+            "merge_success" => "SuccessSound",
+            "milk_pour" => "WaterSound",
+            "cup_take" => "ButtonClickSound",
+            "cup_place" => "ButtonClickSound",
+            "lid_close" => "ButtonClickSound",
+            "ui_click" => "ButtonClickSound",
+            _ => null
+        };
     }
 
     void Subscribe()

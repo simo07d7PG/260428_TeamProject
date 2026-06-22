@@ -36,6 +36,14 @@ public static class ProceduralIconUtility
         if (menu == null)
             return null;
 
+        // 인스펙터(CafeAssetConfig 메뉴 아이콘 맵)가 최우선.
+        if (CafeAssetConfig.Instance != null)
+        {
+            Sprite injected = CafeAssetConfig.Instance.GetMenuIcon(menu.menuName);
+            if (injected != null)
+                return injected;
+        }
+
         string key = string.IsNullOrEmpty(menu.menuName) ? "__menu__" : menu.menuName;
         if (_menuCache.TryGetValue(key, out Sprite cached) && cached != null)
             return cached;
@@ -53,6 +61,14 @@ public static class ProceduralIconUtility
     {
         if (ingredient == null)
             return null;
+
+        // 인스펙터(CafeAssetConfig 재료 타입 아이콘 맵)가 최우선.
+        if (CafeAssetConfig.Instance != null)
+        {
+            Sprite injected = CafeAssetConfig.Instance.GetIngredientIcon(ingredient.type);
+            if (injected != null)
+                return injected;
+        }
 
         int key = ingredient.GetInstanceID();
         if (_ingredientCache.TryGetValue(key, out Sprite cached) && cached != null)
