@@ -1,10 +1,7 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// 게임 전체 상태(일차, 코인, 페이즈)를 관리하는 싱글톤 매니저입니다.
-/// 씬의 Managers 오브젝트에 배치하며, DontDestroyOnLoad로 유지됩니다.
-/// </summary>
+/// <summary>게임 전체 상태(일차, 코인, 페이즈)를 관리하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-100)]
 public class GameManager : MonoBehaviour
 {
@@ -45,7 +42,6 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // 메뉴 씬에서 전달된 시작 의도를 적용합니다.
         switch (GameBootstrap.PendingMode)
         {
             case GameBootstrap.StartMode.NewGame:
@@ -55,8 +51,7 @@ public class GameManager : MonoBehaviour
                 ContinueGame();
                 break;
             default:
-                // 직접 MainScene 실행 등 진입 의도가 없을 때, 씬에 잘못 직렬화된 상태(예: Service)로
-                // 부팅되어 발주 등 '준비 단계 전용' 기능이 막히지 않도록 항상 준비 단계로 정규화합니다.
+                // 진입 의도 없이 부팅 시 잘못 직렬화된 상태로 시작하지 않도록 준비 단계로 정규화.
                 if (CurrentState != GameState.Preparation)
                     SetState(GameState.Preparation);
                 break;
@@ -67,12 +62,10 @@ public class GameManager : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        // 게임을 시작하지 않고 메뉴에서 종료하면 저장을 덮어쓰지 않습니다.
         if (_gameStarted)
             SaveLoadUtility.Save(this);
     }
 
-    /// <summary>새로하기: 저장 삭제 후 1일차/시작 코인으로 초기화합니다.</summary>
     public void StartNewGame()
     {
         _gameStarted = true;
@@ -85,7 +78,6 @@ public class GameManager : MonoBehaviour
             SetState(GameState.Preparation);
     }
 
-    /// <summary>이어하기: 저장된 코인/일차를 불러와 해당 일차의 준비 단계로 시작합니다.</summary>
     public void ContinueGame()
     {
         _gameStarted = true;
@@ -108,9 +100,6 @@ public class GameManager : MonoBehaviour
             Debug.LogError("[GameManager] 같은 오브젝트에 DataManager 컴포넌트를 추가해 주세요.");
     }
 
-    /// <summary>
-    /// 게임 상태를 변경합니다. 4분 세션 내 페이즈 전환에 사용됩니다.
-    /// </summary>
     public void SetState(GameState newState)
     {
         if (CurrentState == newState)
@@ -120,14 +109,12 @@ public class GameManager : MonoBehaviour
         OnStateChanged?.Invoke(CurrentState);
     }
 
-    /// <summary>준비 → 영업으로 전환합니다.</summary>
     public void StartService()
     {
         if (CurrentState == GameState.Preparation)
             SetState(GameState.Service);
     }
 
-    /// <summary>영업 → 정산으로 전환합니다.</summary>
     public void EndService()
     {
         if (CurrentState == GameState.Service)

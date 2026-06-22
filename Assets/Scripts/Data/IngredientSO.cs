@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// 카페에서 사용하는 재료의 기본 데이터입니다.
-/// </summary>
+/// <summary>카페에서 사용하는 재료의 기본 데이터입니다.</summary>
 [CreateAssetMenu(fileName = "NewIngredient", menuName = "CafeSim/Ingredient")]
 public class IngredientSO : ScriptableObject
 {

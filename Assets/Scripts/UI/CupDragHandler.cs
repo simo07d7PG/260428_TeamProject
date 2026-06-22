@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 활성 컵을 잡아 배치하는 핸들러입니다.
-/// 머신 슬롯에 드롭하면 도킹(머신 버튼으로 추출), 그 외에 드롭하면 카운터 아래 '드는 상태'로,
-/// 손님 카드에 드롭하면 완성 후 서빙합니다. 추출/재료 투입은 머신 버튼·재료 도구가 담당합니다.
-/// </summary>
+/// <summary>활성 컵을 잡아 배치하는 핸들러입니다.</summary>
 public class CupDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     static readonly List<RaycastResult> RaycastResults = new();
@@ -79,7 +75,6 @@ public class CupDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
         _dragging = false;
 
-        // 1) 손님 카드 위에 직접 드롭 → 그 손님에게 서빙
         Customer target = FindCustomer(eventData);
         if (target != null)
         {
@@ -87,7 +82,6 @@ public class CupDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
             return;
         }
 
-        // 2) 오른쪽 서빙 존에 드롭 → 현재 선택된(주문 받은) 손님에게 서빙
         if (_serveZone != null &&
             RectTransformUtility.RectangleContainsScreenPoint(_serveZone, eventData.position, eventData.pressEventCamera))
         {
@@ -98,16 +92,14 @@ public class CupDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         if (_machineSlot != null &&
             RectTransformUtility.RectangleContainsScreenPoint(_machineSlot, eventData.position, eventData.pressEventCamera))
         {
-            // 머신에 도킹
             _onMachine = true;
             if (_rect != null)
                 _rect.anchoredPosition = _machinePos;
-            _machineButton?.SetAsLastSibling(); // 버튼을 컵 위로 올려 누를 수 있게
+            _machineButton?.SetAsLastSibling();
             AudioManager.PlaySfx("cup_place");
         }
         else
         {
-            // 카운터 아래 '드는 상태'
             _onMachine = false;
             if (_rect != null)
                 _rect.anchoredPosition = _heldHome;
@@ -162,11 +154,9 @@ public class CupDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         if (!BeverageBuildManager.Instance.IsBuildComplete)
             BeverageBuildManager.Instance.CompleteBuild(out _);
 
-        // 서빙 성공/실패 SFX는 ServiceManager.OnServed 구독(AudioManager)에서 처리됩니다.
         ServiceManager.Instance.TryServe(customer, out string message);
         OnResult?.Invoke(message);
 
-        // 서빙 후에도 빌드가 남아있으면(실패) 컵을 드는 상태로 되돌립니다.
         if (BeverageBuildManager.Instance.IsBuildActive)
             ReturnToHeld();
     }

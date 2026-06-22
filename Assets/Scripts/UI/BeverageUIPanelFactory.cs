@@ -3,15 +3,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 사진 기준 카페 카운터 레이아웃을 런타임에 구성합니다.
-/// 컵 통 / 커피 머신(슬롯+버튼+원형 게이지) / 우유·얼음·토핑·시럽 도구 / 각 칸 아래 재료 변경 / 큰 주문 배너.
-/// 스테이션·컵 배경은 Resources/Sprites/...에서 로드하며 없으면 색으로 표시됩니다.
-/// </summary>
+/// <summary>사진 기준 카페 카운터 레이아웃을 런타임에 구성합니다.</summary>
 public static class BeverageUIPanelFactory
 {
     const string PanelName = "BeveragePanel";
 
+    [System.Serializable]
     public struct BeverageUIRefs
     {
         public RectTransform panelRoot;
@@ -58,13 +55,34 @@ public static class BeverageUIPanelFactory
         return CreatePanel(hostRoot);
     }
 
+    static CafeLayoutAnchors Anchors => CafeLayoutAnchors.Instance;
+
+    static Vector2 SlotPos(RectTransform marker, Vector2 fallback) => marker != null ? marker.anchoredPosition : fallback;
+
+    static Vector2 SlotSize(RectTransform marker, Vector2 fallback) => marker != null ? marker.sizeDelta : fallback;
+
+    static void PlaceWithMarker(RectTransform target, RectTransform marker, Vector2 fallbackPos, Vector2 fallbackSize)
+    {
+        if (marker != null)
+        {
+            target.anchorMin = target.anchorMax = new Vector2(0.5f, 0.5f);
+            target.pivot = new Vector2(0.5f, 0.5f);
+            target.anchoredPosition = marker.anchoredPosition;
+            target.sizeDelta = marker.sizeDelta;
+        }
+        else
+        {
+            target.anchoredPosition = fallbackPos;
+            target.sizeDelta = fallbackSize;
+        }
+    }
+
     static BeverageUIRefs CreatePanel(Transform hostRoot)
     {
         GameObject panelObject = CreateUIObject(PanelName, hostRoot, typeof(Image));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
         StretchFull(panelRect);
         Image panelImage = panelObject.GetComponent<Image>();
-        // 인스펙터로 지정한 영업 배경이 있으면 전체화면 배경으로, 없으면 카운터 스프라이트/색 폴백.
         Sprite background = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.ServiceBackground : null;
         if (background != null)
         {
@@ -81,43 +99,43 @@ public static class BeverageUIPanelFactory
         {
             panelRoot = panelRect,
             selectors = new List<MaterialSelectorUI>(),
-            cupStackHome = new Vector2(-600f, 150f),
-            cupHeldHome = new Vector2(0f, -210f),
-            cupMachinePos = new Vector2(-400f, -74f)
+            cupStackHome = SlotPos(Anchors?.cupStack, CafeLayoutConfig.CupStackHome),
+            cupHeldHome = SlotPos(Anchors?.cupHeld, CafeLayoutConfig.CupHeldHome),
+            cupMachinePos = SlotPos(Anchors?.cupMachine, CafeLayoutConfig.CupMachinePos)
         };
 
         BuildOrderBanner(panelRect, ref refs);
 
-        // 서빙 존 (그림 기준 오른쪽 끝 빈 공간) — 완성한 컵을 여기로 끌어 손님에게 전달
         refs.serveZone = CreateServeZone(panelRect);
 
-        // 컵 통(누르면 컵을 집음) + 컵
         refs.cupStackButton = CreateStackDecor(panelRect, refs.cupStackHome);
         refs.cupCanvas = CreateCup(panelRect, refs.cupStackHome, out refs.cupRoot, out refs.cupDrag);
 
-        // 커피 머신 (슬롯 + 버튼/다이얼 게이지). 다른 스테이션보다 크고 높게.
-        Vector2 machinePos = new Vector2(-400f, 88f);
+        Vector2 machinePos = SlotPos(Anchors?.machine, CafeLayoutConfig.MachinePos);
         BuildMachine(panelRect, ref refs, machinePos);
 
-        // 재료 도구 (드래그해서 컵에) — 머신보다 살짝 낮은 줄
-        refs.milkTool = CreateTool(panelRect, refs, BeverageToolKind.Milk, "우유", new Color(0.85f, 0.88f, 0.92f, 1f), new Vector2(-180f, 66f));
-        refs.iceTool = CreateTool(panelRect, refs, BeverageToolKind.Ice, "얼음", new Color(0.62f, 0.80f, 0.92f, 1f), new Vector2(40f, 66f));
-        refs.toppingTool = CreateTool(panelRect, refs, BeverageToolKind.Topping, "토핑", new Color(0.98f, 0.78f, 0.83f, 1f), new Vector2(260f, 66f));
-        refs.syrupTool = CreateTool(panelRect, refs, BeverageToolKind.Syrup, "시럽", new Color(0.85f, 0.62f, 0.20f, 1f), new Vector2(480f, 66f));
+        refs.milkTool = CreateTool(panelRect, refs, BeverageToolKind.Milk, "우유", new Color(0.85f, 0.88f, 0.92f, 1f),
+            SlotPos(Anchors?.milkTool, CafeLayoutConfig.MilkToolPos), SlotSize(Anchors?.milkTool, CafeLayoutConfig.ToolSize));
+        refs.iceTool = CreateTool(panelRect, refs, BeverageToolKind.Ice, "얼음", new Color(0.62f, 0.80f, 0.92f, 1f),
+            SlotPos(Anchors?.iceTool, CafeLayoutConfig.IceToolPos), SlotSize(Anchors?.iceTool, CafeLayoutConfig.ToolSize));
+        refs.toppingTool = CreateTool(panelRect, refs, BeverageToolKind.Topping, "토핑", new Color(0.98f, 0.78f, 0.83f, 1f),
+            SlotPos(Anchors?.toppingTool, CafeLayoutConfig.ToppingToolPos), SlotSize(Anchors?.toppingTool, CafeLayoutConfig.ToolSize));
+        refs.syrupTool = CreateTool(panelRect, refs, BeverageToolKind.Syrup, "시럽", new Color(0.85f, 0.62f, 0.20f, 1f),
+            SlotPos(Anchors?.syrupTool, CafeLayoutConfig.SyrupToolPos), SlotSize(Anchors?.syrupTool, CafeLayoutConfig.ToolSize));
 
-        // 재료 변경 (각 칸 아래). 원두 변경은 머신 아래(컵 도킹 위치)와 겹치지 않게 컵통 열 아래로.
-        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Base, new Vector2(-600f, -48f)));
-        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Milk, new Vector2(-180f, -48f)));
-        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Topping, new Vector2(260f, -48f)));
-        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Syrup, new Vector2(480f, -48f)));
+        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Base,
+            SlotPos(Anchors?.baseSelector, CafeLayoutConfig.BaseSelectorPos), SlotSize(Anchors?.baseSelector, CafeLayoutConfig.SelectorSize)));
+        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Milk,
+            SlotPos(Anchors?.milkSelector, CafeLayoutConfig.MilkSelectorPos), SlotSize(Anchors?.milkSelector, CafeLayoutConfig.SelectorSize)));
+        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Topping,
+            SlotPos(Anchors?.toppingSelector, CafeLayoutConfig.ToppingSelectorPos), SlotSize(Anchors?.toppingSelector, CafeLayoutConfig.SelectorSize)));
+        refs.selectors.Add(CreateSelector(panelRect, IngredientType.Syrup,
+            SlotPos(Anchors?.syrupSelector, CafeLayoutConfig.SyrupSelectorPos), SlotSize(Anchors?.syrupSelector, CafeLayoutConfig.SelectorSize)));
 
-        // 컵을 도구 위로 올려 가리지 않게
         refs.cupRoot.SetAsLastSibling();
 
-        // 머신 스파웃(전면 토출구) — 컵보다 앞에 그려서 컵이 '머신 아래'로 들어가 보이게
         CreateMachineSpout(panelRect, machinePos);
 
-        // 와이어링
         refs.cupDrag.Bind(refs.machineSlot, refs.machineButtonRect, refs.serveZone, refs.cupMachinePos, refs.cupHeldHome, refs.cupStackHome);
         refs.machineButton.Bind(refs.machineNeedle, refs.cupDrag);
 
@@ -136,9 +154,7 @@ public static class BeverageUIPanelFactory
         GameObject bannerObj = CreateUIObject("OrderBanner", parent, typeof(Image));
         RectTransform banner = bannerObj.GetComponent<RectTransform>();
         banner.anchorMin = new Vector2(0.5f, 1f); banner.anchorMax = new Vector2(0.5f, 1f); banner.pivot = new Vector2(0.5f, 1f);
-        // 상단바(56) + 손님 대기열(가로) 아래에 배치(겹침 방지)
-        banner.anchoredPosition = new Vector2(0f, -212f);
-        banner.sizeDelta = new Vector2(700f, 118f);
+        PlaceWithMarker(banner, Anchors?.banner, CafeLayoutConfig.BannerPos, CafeLayoutConfig.BannerSize);
         bannerObj.GetComponent<Image>().color = new Color(0.16f, 0.14f, 0.13f, 0.96f);
 
         GameObject iconObj = CreateUIObject("OrderIcon", banner, typeof(Image));
@@ -178,7 +194,7 @@ public static class BeverageUIPanelFactory
         GameObject body = CreateUIObject("Machine", parent, typeof(Image));
         RectTransform bodyRect = body.GetComponent<RectTransform>();
         bodyRect.anchorMin = bodyRect.anchorMax = new Vector2(0.5f, 0.5f); bodyRect.pivot = new Vector2(0.5f, 0.5f);
-        bodyRect.anchoredPosition = pos; bodyRect.sizeDelta = new Vector2(200f, 210f);
+        bodyRect.anchoredPosition = pos; bodyRect.sizeDelta = SlotSize(Anchors?.machine, CafeLayoutConfig.MachineSize);
         Image bodyImg = body.GetComponent<Image>();
         bodyImg.raycastTarget = false;
         CafeSpriteUtility.ApplyStation(bodyImg, "EspressoShot", new Color(0.30f, 0.20f, 0.16f, 1f));
@@ -189,15 +205,12 @@ public static class BeverageUIPanelFactory
         mlRect.offsetMin = new Vector2(4f, -40f); mlRect.offsetMax = new Vector2(-4f, -6f);
         refs.machineLabel.raycastTarget = false;
 
-        // 컵 슬롯(히트테스트용, 머신 하단 — 컵을 여기로 끌어 도킹)
         GameObject slot = CreateUIObject("CupSlot", parent);
         refs.machineSlot = slot.GetComponent<RectTransform>();
         refs.machineSlot.anchorMin = refs.machineSlot.anchorMax = new Vector2(0.5f, 0.5f); refs.machineSlot.pivot = new Vector2(0.5f, 0.5f);
         refs.machineSlot.anchoredPosition = new Vector2(pos.x, pos.y - 170f);
         refs.machineSlot.sizeDelta = new Vector2(190f, 200f);
 
-        // 버튼(다이얼) — 머신 면 상단. 홀드하면 바늘이 시계방향으로 돕니다.
-        // 위치는 CafeAssetConfig.GaugeOffset(인스펙터)으로 직접 조절할 수 있습니다.
         Vector2 gaugeOffset = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.GaugeOffset : new Vector2(0f, 30f);
         GameObject button = CreateUIObject("MachineButton", parent, typeof(Image), typeof(MachineButtonInteraction));
         refs.machineButtonRect = button.GetComponent<RectTransform>();
@@ -205,24 +218,21 @@ public static class BeverageUIPanelFactory
         refs.machineButtonRect.anchoredPosition = new Vector2(pos.x + gaugeOffset.x, pos.y + gaugeOffset.y);
         refs.machineButtonRect.sizeDelta = new Vector2(96f, 96f);
         Image dial = button.GetComponent<Image>();
-        dial.sprite = UIShapeUtility.Disc(); // 진짜 둥근 다이얼
+        dial.sprite = UIShapeUtility.Disc();
         dial.type = Image.Type.Simple;
         dial.color = new Color(0.16f, 0.13f, 0.11f, 1f);
         dial.raycastTarget = true;
 
-        // 3색 부채꼴이 다이얼 '전체'를 빈틈없이 채우도록 채움 범위(0~MaxFill)를 한 바퀴(360도)에 매핑.
-        // 바늘도 동일하게 fill/MaxFill로 회전하므로 구역과 정확히 일치합니다. 색은 주황→초록→빨강 3가지뿐.
         float gMax = MachineButtonInteraction.MaxFill;
         float gMin = MachineButtonInteraction.SweetMin;
         float gPerfect = MachineButtonInteraction.SweetMax;
         CreateArc(refs.machineButtonRect, "LowZone", new Color(0.95f, 0.66f, 0.26f, 0.95f),
-            gMin / gMax, 0f);                                   // 부족(주황) [0~SweetMin]
+            gMin / gMax, 0f);
         CreateArc(refs.machineButtonRect, "GreenZone", new Color(0.3f, 0.82f, 0.42f, 0.98f),
-            (gPerfect - gMin) / gMax, gMin / gMax);             // 안전(초록) [SweetMin~SweetMax]
+            (gPerfect - gMin) / gMax, gMin / gMax);
         CreateArc(refs.machineButtonRect, "RedZone", new Color(0.9f, 0.32f, 0.28f, 0.98f),
-            (gMax - gPerfect) / gMax, gPerfect / gMax);         // 과추출(빨강) [SweetMax~MaxFill]
+            (gMax - gPerfect) / gMax, gPerfect / gMax);
 
-        // 다이얼 외곽 링
         GameObject ringObj = CreateUIObject("DialRing", refs.machineButtonRect, typeof(Image));
         StretchFull(ringObj.GetComponent<RectTransform>());
         Image ring = ringObj.GetComponent<Image>();
@@ -231,7 +241,6 @@ public static class BeverageUIPanelFactory
         ring.color = new Color(0.86f, 0.86f, 0.9f, 0.9f);
         ring.raycastTarget = false;
 
-        // 바늘 (중심에서 위로, 회전)
         GameObject needleObj = CreateUIObject("Needle", refs.machineButtonRect, typeof(Image));
         refs.machineNeedle = needleObj.GetComponent<RectTransform>();
         refs.machineNeedle.anchorMin = refs.machineNeedle.anchorMax = new Vector2(0.5f, 0.5f);
@@ -242,7 +251,6 @@ public static class BeverageUIPanelFactory
         needleImg.color = new Color(0.92f, 0.2f, 0.18f, 1f);
         needleImg.raycastTarget = false;
 
-        // 중심 캡
         GameObject cap = CreateUIObject("Cap", refs.machineButtonRect, typeof(Image));
         RectTransform capRect = cap.GetComponent<RectTransform>();
         capRect.anchorMin = capRect.anchorMax = new Vector2(0.5f, 0.5f); capRect.pivot = new Vector2(0.5f, 0.5f);
@@ -262,10 +270,7 @@ public static class BeverageUIPanelFactory
         refs.machineButton = button.GetComponent<MachineButtonInteraction>();
     }
 
-    /// <summary>
-    /// 다이얼 위 부채꼴 구역. widthFraction = 구역 폭(바퀴 비율), startFraction = 시작 위치(바퀴 비율).
-    /// 시작 위치는 바늘과 같은 시계방향 기준으로 회전해 정렬합니다.
-    /// </summary>
+    /// <summary>다이얼 위 부채꼴 구역을 만들어 바늘과 같은 시계방향 기준으로 정렬합니다.</summary>
     static Image CreateArc(RectTransform parent, string name, Color color, float widthFraction, float startFraction)
     {
         GameObject obj = CreateUIObject(name, parent, typeof(Image));
@@ -284,12 +289,12 @@ public static class BeverageUIPanelFactory
         return img;
     }
 
-    static BeverageTool CreateTool(RectTransform parent, BeverageUIRefs refs, BeverageToolKind kind, string label, Color color, Vector2 pos)
+    static BeverageTool CreateTool(RectTransform parent, BeverageUIRefs refs, BeverageToolKind kind, string label, Color color, Vector2 pos, Vector2 size)
     {
         GameObject obj = CreateUIObject($"Tool_{kind}", parent, typeof(Image), typeof(BeverageTool));
         RectTransform rect = obj.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f); rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = pos; rect.sizeDelta = new Vector2(116f, 130f);
+        rect.anchoredPosition = pos; rect.sizeDelta = size;
 
         Image bg = obj.GetComponent<Image>();
         bg.raycastTarget = true;
@@ -305,12 +310,12 @@ public static class BeverageUIPanelFactory
         return tool;
     }
 
-    static MaterialSelectorUI CreateSelector(RectTransform parent, IngredientType type, Vector2 pos)
+    static MaterialSelectorUI CreateSelector(RectTransform parent, IngredientType type, Vector2 pos, Vector2 size)
     {
         GameObject obj = CreateUIObject($"Selector_{type}", parent, typeof(MaterialSelectorUI));
         RectTransform rect = obj.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f); rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = pos; rect.sizeDelta = new Vector2(190f, 64f);
+        rect.anchoredPosition = pos; rect.sizeDelta = size;
 
         TextMeshProUGUI label = CreateLabel(rect, "Label", "<  >", 15);
         RectTransform labelRect = label.rectTransform;
@@ -345,7 +350,7 @@ public static class BeverageUIPanelFactory
         rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f); rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = pos; rect.sizeDelta = new Vector2(120f, 200f);
         Image bg = obj.GetComponent<Image>();
-        bg.raycastTarget = true; // 눌러서 컵을 집을 수 있게
+        bg.raycastTarget = true;
         CafeSpriteUtility.ApplyStation(bg, "Cup", new Color(0.30f, 0.34f, 0.40f, 1f));
 
         TextMeshProUGUI label = CreateLabel(rect, "Label", "컵 통\n(눌러서 컵 집기)", 14);
@@ -360,11 +365,10 @@ public static class BeverageUIPanelFactory
         GameObject obj = CreateUIObject("ServeZone", parent, typeof(Image));
         RectTransform rect = obj.GetComponent<RectTransform>();
         rect.anchorMin = new Vector2(1f, 0.5f); rect.anchorMax = new Vector2(1f, 0.5f); rect.pivot = new Vector2(1f, 0.5f);
-        rect.anchoredPosition = new Vector2(-36f, -40f);
-        rect.sizeDelta = new Vector2(180f, 320f);
+        PlaceWithMarker(rect, Anchors?.serveZone, CafeLayoutConfig.ServeZonePos, CafeLayoutConfig.ServeZoneSize);
         Image bg = obj.GetComponent<Image>();
         bg.color = new Color(0.22f, 0.38f, 0.30f, 0.5f);
-        bg.raycastTarget = false; // 사각 영역 히트테스트는 CupDragHandler가 처리
+        bg.raycastTarget = false;
 
         TextMeshProUGUI label = CreateLabel(rect, "Label", "여기로 끌어\n손님에게\n서빙", 18);
         StretchFull(label.rectTransform);
@@ -373,7 +377,6 @@ public static class BeverageUIPanelFactory
         return rect;
     }
 
-    // 머신 전면 토출구. 컵보다 앞(나중 형제)에 그려져 도킹한 컵의 윗부분을 가려 '머신 아래' 느낌을 줍니다.
     static void CreateMachineSpout(RectTransform parent, Vector2 machinePos)
     {
         GameObject obj = CreateUIObject("MachineSpout", parent, typeof(Image));
@@ -396,7 +399,7 @@ public static class BeverageUIPanelFactory
         GameObject cupObject = CreateUIObject("CupCanvas", parent, typeof(CupCanvasUI), typeof(CupDragHandler));
         cupRoot = cupObject.GetComponent<RectTransform>();
         cupRoot.anchorMin = cupRoot.anchorMax = new Vector2(0.5f, 0.5f); cupRoot.pivot = new Vector2(0.5f, 0.5f);
-        cupRoot.anchoredPosition = home; cupRoot.sizeDelta = new Vector2(150f, 205f);
+        cupRoot.anchoredPosition = home; cupRoot.sizeDelta = SlotSize(Anchors?.cupSize, CafeLayoutConfig.CupSize);
 
         GameObject bodyObject = CreateUIObject("CupBody", cupRoot, typeof(Image));
         RectTransform bodyRect = bodyObject.GetComponent<RectTransform>();

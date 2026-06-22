@@ -1,10 +1,7 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// 메뉴 한 종류가 요구하는 단일 스테이션 구성 조건입니다.
-/// 밀크는 amount(게이지), 시럽/토핑은 count를 사용합니다.
-/// </summary>
+/// <summary>메뉴 한 종류가 요구하는 단일 스테이션 구성 조건입니다.</summary>
 [Serializable]
 public class MenuLayerSpec
 {
@@ -20,10 +17,7 @@ public class MenuLayerSpec
     public int targetCount = 1;
 }
 
-/// <summary>
-/// GPGP식 음료 메뉴의 완성 조건 데이터입니다. MergeRecipeSO와는 별개입니다.
-/// 에셋이 없어도 MenuCatalog의 하드코드 폴백으로 게임이 동작합니다.
-/// </summary>
+/// <summary>GPGP식 음료 메뉴의 완성 조건 데이터입니다. MergeRecipeSO와는 별개입니다.</summary>
 [CreateAssetMenu(fileName = "NewMenuRecipe", menuName = "CafeSim/Menu Recipe")]
 public class MenuRecipeSO : ScriptableObject
 {

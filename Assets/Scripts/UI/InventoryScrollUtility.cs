@@ -2,9 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-/// <summary>
-/// 인벤토리 패널에 가로 스크롤 뷰포트를 런타임 구성합니다.
-/// </summary>
+/// <summary>인벤토리 패널에 가로 스크롤 뷰포트를 런타임 구성합니다.</summary>
 public static class InventoryScrollUtility
 {
     const string ViewportName = "ScrollViewport";
@@ -106,9 +104,7 @@ public static class InventoryScrollUtility
     }
 }
 
-/// <summary>
-/// 마우스 휠로 인벤토리를 좌우 스크롤합니다.
-/// </summary>
+/// <summary>마우스 휠로 인벤토리를 좌우 스크롤합니다.</summary>
 public class InventoryHorizontalScroll : MonoBehaviour, IScrollHandler
 {
     ScrollRect _scrollRect;

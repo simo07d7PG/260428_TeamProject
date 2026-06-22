@@ -3,15 +3,11 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 제작 중인 음료의 컵과 레이어(에스프레소/밀크/시럽 방울/토핑)를 실시간 렌더링합니다.
-/// 토핑 배치를 위한 정규화 좌표 변환도 제공합니다.
-/// </summary>
+/// <summary>제작 중인 음료의 컵과 레이어를 실시간 렌더링합니다.</summary>
 public class CupCanvasUI : MonoBehaviour
 {
-    // 음료 레이어 색은 CafeTheme(인스펙터 CafeAssetConfig 오버라이드 → 기본값)에서 가져옵니다.
-    [SerializeField] RectTransform liquidArea;   // 컵 내부 액체 영역 (마스크됨)
-    [SerializeField] RectTransform decorArea;     // 방울/토핑 배치 영역 (컵 전체)
+    [SerializeField] RectTransform liquidArea;
+    [SerializeField] RectTransform decorArea;
     [SerializeField] Image espressoFill;
     [SerializeField] Image milkFill;
     [SerializeField] Image lidImage;

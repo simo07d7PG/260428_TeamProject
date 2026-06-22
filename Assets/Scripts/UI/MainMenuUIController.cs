@@ -5,11 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-/// <summary>
-/// 별도의 'MainMenu' 씬에서 동작하는 메인 화면입니다.
-/// 빈 GameObject에 이 컴포넌트만 붙이면 Canvas/EventSystem을 확보하고 UI를 구성합니다.
-/// 새로하기/이어하기 선택 시 시작 의도를 저장하고 게임 씬을 로드합니다.
-/// </summary>
+/// <summary>'MainMenu' 씬의 메인 화면을 구성하고 시작 의도/씬 로드를 처리합니다.</summary>
 public class MainMenuUIController : MonoBehaviour
 {
     [Tooltip("로드할 게임 씬 이름 (Build Settings에 포함되어야 함)")]
@@ -34,23 +30,105 @@ public class MainMenuUIController : MonoBehaviour
     {
         RectTransform canvasRect = EnsureCanvas();
 
-        GameObject rootObj = UIFactoryUtility.CreateUIObject("MainMenuUI", canvasRect);
-        _root = rootObj.GetComponent<RectTransform>();
-        UIFactoryUtility.StretchHost(_root);
-
         BuildResolutions();
         _fullscreen = SettingsUtility.Fullscreen;
         _aaIndex = Mathf.Max(0, System.Array.IndexOf(SettingsUtility.MsaaOptions, SettingsUtility.MsaaSamples));
 
-        BuildMenu();
-        BuildOptions();
-        BuildConfirm();
-        UIFontUtility.ApplyToHierarchy(_root);
+        RectTransform existing = canvasRect.Find("MainMenuUI") as RectTransform;
+        if (existing != null)
+        {
+            BindMenu(existing);
+        }
+        else
+        {
+            BuildMenuUI(canvasRect);
+            UIFontUtility.ApplyToHierarchy(_root);
+        }
 
         _optionsPanel.gameObject.SetActive(false);
         _confirmPanel.gameObject.SetActive(false);
         RefreshContinueButton();
         RefreshOptionLabels();
+    }
+
+    /// <summary>에디터에서 씬에 메인 메뉴를 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        RectTransform canvasRect = EnsureCanvas();
+        BuildResolutions();
+        _fullscreen = SettingsUtility.Fullscreen;
+        _aaIndex = Mathf.Max(0, System.Array.IndexOf(SettingsUtility.MsaaOptions, SettingsUtility.MsaaSamples));
+
+        if (canvasRect.Find("MainMenuUI") == null)
+            BuildMenuUI(canvasRect);
+        UIFontUtility.ApplyToHierarchy(_root);
+    }
+
+    void BuildMenuUI(RectTransform canvasRect)
+    {
+        GameObject rootObj = UIFactoryUtility.CreateUIObject("MainMenuUI", canvasRect);
+        _root = rootObj.GetComponent<RectTransform>();
+        UIFactoryUtility.StretchHost(_root);
+
+        BuildMenu();
+        BuildOptions();
+        BuildConfirm();
+    }
+
+    void BindMenu(RectTransform root)
+    {
+        _root = root;
+        _menuRoot = root.Find("MainMenuRoot") as RectTransform;
+        if (_menuRoot != null)
+        {
+            BindButton(_menuRoot.Find("Btn_이어하기") as RectTransform, OnContinue, out _continueButton);
+            BindButton(_menuRoot.Find("Btn_새로하기") as RectTransform, OnNewGame, out _);
+            BindButton(_menuRoot.Find("Btn_옵션") as RectTransform, OnOpenOptions, out _);
+            BindButton(_menuRoot.Find("Btn_종료") as RectTransform, OnQuit, out _);
+
+            _confirmPanel = _menuRoot.Find("ConfirmDim") as RectTransform;
+            _optionsPanel = _menuRoot.Find("OptionsDim") as RectTransform;
+        }
+
+        if (_confirmPanel != null)
+        {
+            RectTransform panel = _confirmPanel.Find("ConfirmPanel") as RectTransform;
+            BindButton(panel?.Find("Yes") as RectTransform, () => { _confirmPanel.gameObject.SetActive(false); StartFresh(); }, out _);
+            BindButton(panel?.Find("No") as RectTransform, () => _confirmPanel.gameObject.SetActive(false), out _);
+        }
+
+        if (_optionsPanel != null)
+        {
+            BindButton(_optionsPanel as RectTransform, () => _optionsPanel.gameObject.SetActive(false), out _);
+            RectTransform panel = _optionsPanel.Find("OptionsPanel") as RectTransform;
+            _volumeValue = BindRow(panel, "Row_사운드", () => AdjustVolume(-0.1f), () => AdjustVolume(0.1f));
+            _fullscreenValue = BindRow(panel, "Row_전체화면", ToggleFullscreen, ToggleFullscreen);
+            _resValue = BindRow(panel, "Row_해상도", () => CycleResolution(-1), () => CycleResolution(1));
+            _aaValue = BindRow(panel, "Row_안티에일리어싱", () => CycleAa(-1), () => CycleAa(1));
+
+            BindButton(panel?.Find("Apply") as RectTransform, ApplyDisplay, out _);
+            BindButton(panel?.Find("Close") as RectTransform, () => _optionsPanel.gameObject.SetActive(false), out _);
+        }
+    }
+
+    static void BindButton(RectTransform rect, UnityEngine.Events.UnityAction action, out Button button)
+    {
+        button = rect != null ? rect.GetComponent<Button>() : null;
+        if (button != null)
+        {
+            button.onClick.RemoveListener(action);
+            button.onClick.AddListener(action);
+        }
+    }
+
+    TextMeshProUGUI BindRow(RectTransform panel, string rowName, UnityEngine.Events.UnityAction onLeft, UnityEngine.Events.UnityAction onRight)
+    {
+        RectTransform row = panel?.Find(rowName) as RectTransform;
+        if (row == null)
+            return null;
+        BindButton(row.Find("Left") as RectTransform, onLeft, out _);
+        BindButton(row.Find("Right") as RectTransform, onRight, out _);
+        return row.Find("Value")?.GetComponent<TextMeshProUGUI>();
     }
 
     RectTransform EnsureCanvas()
@@ -67,14 +145,11 @@ public class MainMenuUIController : MonoBehaviour
             scaler.matchWidthOrHeight = 0.5f;
         }
 
-        // 입력을 위해 EventSystem이 필요합니다. 없으면 폴백 생성.
         if (FindAnyObjectByType<EventSystem>() == null)
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
         return canvas.transform as RectTransform;
     }
-
-    // --- 메뉴 ---
 
     void BuildMenu()
     {
@@ -168,8 +243,6 @@ public class MainMenuUIController : MonoBehaviour
             _continueButton.interactable = SaveLoadUtility.HasSave();
     }
 
-    // --- 확인(덮어쓰기) ---
-
     void BuildConfirm()
     {
         GameObject dim = UIFactoryUtility.CreateUIObject("ConfirmDim", _menuRoot, typeof(Image));
@@ -209,8 +282,6 @@ public class MainMenuUIController : MonoBehaviour
         rect.anchoredPosition = new Vector2(xOffset, 18f);
         rect.sizeDelta = new Vector2(190f, 48f);
     }
-
-    // --- 옵션 ---
 
     void BuildOptions()
     {
@@ -291,8 +362,6 @@ public class MainMenuUIController : MonoBehaviour
         rect.sizeDelta = new Vector2(size, size);
     }
 
-    // --- 옵션 동작 ---
-
     void AdjustVolume(float delta)
     {
         SettingsUtility.MasterVolume = SettingsUtility.MasterVolume + delta;
@@ -302,6 +371,7 @@ public class MainMenuUIController : MonoBehaviour
     void ToggleFullscreen()
     {
         _fullscreen = !_fullscreen;
+        SettingsUtility.Fullscreen = _fullscreen;
         RefreshOptionLabels();
     }
 

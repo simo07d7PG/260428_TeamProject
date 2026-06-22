@@ -3,10 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Merge UI 전체를 갱신하고 결과/폐기 비용 피드백을 표시합니다.
-/// Inspector에서 참조를 직접 연결합니다.
-/// </summary>
+/// <summary>Merge UI 전체를 갱신하고 결과/폐기 비용 피드백을 표시합니다.</summary>
 public class MergeUIController : MonoBehaviour
 {
     [SerializeField] Transform basicInventoryRoot;
@@ -42,7 +39,7 @@ public class MergeUIController : MonoBehaviour
         RectTransform rect = button.GetComponent<RectTransform>();
         rect.anchorMin = rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
-        rect.anchoredPosition = new Vector2(60f, -120f); // 레시피 버튼 아래(좌상단). 필요 시 조정.
+        rect.anchoredPosition = new Vector2(60f, -120f);
         rect.sizeDelta = new Vector2(150f, 44f);
         button.onClick.AddListener(() => PreparationManager.Instance?.MergeAllPairs());
 

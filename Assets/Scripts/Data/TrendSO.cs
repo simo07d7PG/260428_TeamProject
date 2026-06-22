@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// 특정 재료나 메뉴에 배수를 적용하는 트렌드 데이터입니다.
-/// </summary>
+/// <summary>특정 재료나 메뉴에 배수를 적용하는 트렌드 데이터입니다.</summary>
 [CreateAssetMenu(fileName = "NewTrend", menuName = "CafeSim/Trend")]
 public class TrendSO : ScriptableObject
 {

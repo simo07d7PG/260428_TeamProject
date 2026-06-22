@@ -2,10 +2,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-/// <summary>
-/// 사운드/그래픽 설정을 PlayerPrefs에 저장하고 적용하는 유틸리티입니다.
-/// 시작 시 저장된 설정을 자동 적용합니다. (옵션 화면에서 변경)
-/// </summary>
+/// <summary>사운드/그래픽 설정을 PlayerPrefs에 저장하고 적용하는 유틸리티입니다.</summary>
 public static class SettingsUtility
 {
     const string KeyVolume = "opt_master_volume";
@@ -14,7 +11,7 @@ public static class SettingsUtility
     const string KeyResH = "opt_res_h";
     const string KeyMsaa = "opt_msaa";
 
-    public static readonly int[] MsaaOptions = { 1, 2, 4, 8 }; // 1 = 끄기
+    public static readonly int[] MsaaOptions = { 1, 2, 4, 8 };
 
     public static float MasterVolume
     {
@@ -64,7 +61,6 @@ public static class SettingsUtility
             fullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
     }
 
-    /// <summary>MSAA 적용. URP 에셋은 리플렉션으로 안전하게 설정합니다.</summary>
     static void ApplyMsaa(int samples)
     {
         int s = samples <= 1 ? 0 : samples;

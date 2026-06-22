@@ -3,9 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 발주 패널을 화면 오른쪽 끝에서 슬라이드로 열고 닫습니다.
-/// </summary>
+/// <summary>발주 패널을 화면 오른쪽 끝에서 슬라이드로 열고 닫습니다.</summary>
 public class SupplyPanelDrawer : MonoBehaviour
 {
     const string ExpandedLabel = ">";

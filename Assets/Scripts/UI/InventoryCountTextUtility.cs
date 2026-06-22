@@ -1,9 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// 인벤토리 아이템 개수 텍스트를 생성·배치합니다.
-/// </summary>
+/// <summary>인벤토리 아이템 개수 텍스트를 생성·배치합니다.</summary>
 public static class InventoryCountTextUtility
 {
     const string CountChildName = "Count";

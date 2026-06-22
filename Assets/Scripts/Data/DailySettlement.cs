@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 
-/// <summary>
-/// 하루 영업의 정산 결과입니다.
-/// </summary>
+/// <summary>하루 영업의 정산 결과입니다.</summary>
 public class DailySettlement
 {
     public int Day;

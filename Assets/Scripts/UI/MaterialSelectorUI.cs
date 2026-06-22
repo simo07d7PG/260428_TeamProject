@@ -3,10 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 각 스테이션 아래의 '재료 변경' 칸입니다. 같은 타입의 IngredientSO를 '&lt;' '&gt;'로 순환 선택하고,
-/// 선택한 재료와 보유 수량을 표시합니다. 선택은 BeverageBuildManager가 소비 시 우선합니다.
-/// </summary>
+/// <summary>각 스테이션 아래의 '재료 변경' 칸입니다.</summary>
 public class MaterialSelectorUI : MonoBehaviour
 {
     IngredientType _type;

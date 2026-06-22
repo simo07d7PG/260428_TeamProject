@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 하루 1회 발주와 영업 종료 시 재료 폐기 비용을 관리하는 싱글톤 매니저입니다.
-/// </summary>
+/// <summary>하루 1회 발주와 영업 종료 시 재료 폐기 비용을 관리하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-5)]
 public class SupplyManager : MonoBehaviour
 {
@@ -156,9 +154,6 @@ public class SupplyManager : MonoBehaviour
         return GetTotalStock(ingredient) < minimumCriticalStock;
     }
 
-    /// <summary>
-    /// Phase 5 제작 시스템에서 사용합니다. Critical 재료가 부족하면 false를 반환합니다.
-    /// </summary>
     public bool CanCraftRequiring(IngredientSO ingredient, int requiredCount = 1)
     {
         if (ingredient == null || requiredCount <= 0)
@@ -186,9 +181,6 @@ public class SupplyManager : MonoBehaviour
         return result;
     }
 
-    /// <summary>
-    /// 영업 종료 시 남은 재료 폐기 비용 (재료 가치 30% + 고정 150 Coin)
-    /// </summary>
     public int CalculateRemainingIngredientDisposalCost()
     {
         if (PreparationManager.Instance == null)

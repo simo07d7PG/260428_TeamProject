@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 제작 중이거나 완성된 음료의 전체 구성을 담는 스냅샷입니다.
-/// 레이어 목록과, 평가·메뉴 매칭에 쓰는 요약 값을 함께 제공합니다.
-/// </summary>
+/// <summary>제작 중이거나 완성된 음료의 전체 구성을 담는 스냅샷입니다.</summary>
 public class BeverageBuildSnapshot
 {
     readonly List<BeverageLayer> _layers = new();
@@ -12,13 +9,10 @@ public class BeverageBuildSnapshot
     public IReadOnlyList<BeverageLayer> Layers => _layers;
     public bool IsComplete { get; set; }
 
-    /// <summary>완성 시 추정/확정된 메뉴 이름. ("라떼" / "알 수 없는 음료")</summary>
     public string EstimatedMenuName { get; set; } = "빈 컵";
 
-    /// <summary>매칭된 메뉴 정의(폴백 포함). null이면 미상.</summary>
     public MenuDefinition MatchedMenu { get; set; }
 
-    /// <summary>0~1. 추정 메뉴와의 일치 신뢰도.</summary>
     public float MatchConfidence { get; set; }
 
     public BeverageLayer GetLayer(StationType station)
@@ -61,7 +55,6 @@ public class BeverageBuildSnapshot
         }
     }
 
-    /// <summary>샷 추출 타이밍 품질 평균(0~1).</summary>
     public float ShotQuality
     {
         get
@@ -71,7 +64,6 @@ public class BeverageBuildSnapshot
         }
     }
 
-    /// <summary>밀크 게이지(0~1).</summary>
     public float MilkAmount
     {
         get
@@ -124,7 +116,6 @@ public class BeverageBuildSnapshot
         }
     }
 
-    /// <summary>Lv2 이상(머지로 만든 프리미엄) 재료를 사용한 레이어 수.</summary>
     public int PremiumIngredientCount
     {
         get

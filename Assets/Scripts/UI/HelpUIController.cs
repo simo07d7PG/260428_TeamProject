@@ -2,10 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// "?" 버튼으로 토글하는 도움말 오버레이입니다. 조작법과 주문 암호 범례를 안내합니다.
-/// 게임 상태와 무관하게 항상 접근 가능하며 기본은 숨김입니다.
-/// </summary>
+/// <summary>"?" 버튼으로 토글하는 도움말 오버레이입니다. 조작법과 주문 암호 범례를 안내합니다.</summary>
 public class HelpUIController : MonoBehaviour
 {
     const string HelpText =
@@ -42,14 +39,56 @@ public class HelpUIController : MonoBehaviour
     void Awake()
     {
         ConfigureHostTransform(transform as RectTransform);
-        BuildUI();
+
+        RectTransform existing = transform.Find("HelpDim") as RectTransform;
+        if (existing != null)
+            Bind(existing);
+        else
+            BuildUI();
+
         UIFontUtility.ApplyToHierarchy(transform);
         SetOpen(false);
     }
 
+    /// <summary>에디터에서 씬에 도움말 UI를 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("HelpDim") == null)
+            BuildUI();
+        UIFontUtility.ApplyToHierarchy(transform);
+    }
+
+    void Bind(RectTransform dim)
+    {
+        _panel = dim;
+
+        _toggleButton = transform.Find("HelpToggle")?.GetComponent<Button>();
+        if (_toggleButton != null)
+        {
+            _toggleButton.onClick.RemoveListener(Toggle);
+            _toggleButton.onClick.AddListener(Toggle);
+        }
+
+        Button dimButton = dim.GetComponent<Button>();
+        if (dimButton != null)
+        {
+            dimButton.onClick.RemoveListener(CloseFromUI);
+            dimButton.onClick.AddListener(CloseFromUI);
+        }
+
+        Button closeButton = dim.Find("HelpPanel/CloseButton")?.GetComponent<Button>();
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(CloseFromUI);
+            closeButton.onClick.AddListener(CloseFromUI);
+        }
+    }
+
+    void CloseFromUI() => SetOpen(false);
+
     void BuildUI()
     {
-        // "?" 토글 버튼 — 좌측 상단
         _toggleButton = UIFactoryUtility.CreateButton(
             transform as RectTransform, "HelpToggle", "?", new Color(0.22f, 0.26f, 0.32f, 0.95f));
         RectTransform toggleRect = _toggleButton.GetComponent<RectTransform>();
@@ -66,13 +105,11 @@ public class HelpUIController : MonoBehaviour
         }
         _toggleButton.onClick.AddListener(Toggle);
 
-        // 도움말 패널 (어두운 배경 + 중앙 패널)
         GameObject dimObject = UIFactoryUtility.CreateUIObject("HelpDim", transform, typeof(Image), typeof(Button));
         _panel = dimObject.GetComponent<RectTransform>();
         UIFactoryUtility.StretchFull(_panel);
         dimObject.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.06f, 0.78f);
-        // 배경 클릭 시 닫기
-        dimObject.GetComponent<Button>().onClick.AddListener(() => SetOpen(false));
+        dimObject.GetComponent<Button>().onClick.AddListener(CloseFromUI);
 
         GameObject panelObject = UIFactoryUtility.CreateUIObject("HelpPanel", _panel, typeof(Image));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
@@ -102,7 +139,7 @@ public class HelpUIController : MonoBehaviour
         closeRect.pivot = new Vector2(0.5f, 0f);
         closeRect.anchoredPosition = new Vector2(0f, 16f);
         closeRect.sizeDelta = new Vector2(200f, 44f);
-        closeButton.onClick.AddListener(() => SetOpen(false));
+        closeButton.onClick.AddListener(CloseFromUI);
     }
 
     void Toggle() => SetOpen(!_open);

@@ -7,17 +7,14 @@ using UnityEngine.EventSystems;
 /// <summary>도구 종류. 컵 위에서의 조작 방식이 달라집니다.</summary>
 public enum BeverageToolKind
 {
-    Milk,    // 컵 위에서 부어 게이지 채움(연속)
-    Syrup,   // 컵 위에서 짜듯이 방울 떨어뜨림(간격)
-    Topping, // 컵에 드롭해 배치(조준)
-    Lid,     // 컵에 드롭해 씌움
-    Ice      // 컵에 드롭해 얼음 추가
+    Milk,
+    Syrup,
+    Topping,
+    Lid,
+    Ice
 }
 
-/// <summary>
-/// GPGP식으로 직접 잡아 컵 위로 가져가 조작하는 도구입니다.
-/// 드래그로 도구를 들어 컵 위에서 동작을 수행하고, 놓으면 제자리로 돌아갑니다.
-/// </summary>
+/// <summary>직접 잡아 컵 위로 가져가 조작하는 도구입니다.</summary>
 public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] BeverageToolKind kind;
@@ -79,7 +76,7 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             case BeverageToolKind.Milk: type = IngredientType.Milk; return true;
             case BeverageToolKind.Syrup: type = IngredientType.Syrup; return true;
             case BeverageToolKind.Topping: type = IngredientType.Topping; return true;
-            default: type = IngredientType.Base; return false; // Lid/Ice는 재고 없음
+            default: type = IngredientType.Base; return false;
         }
     }
 
@@ -167,7 +164,6 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         _overCup = over;
 
-        // 붓는 도구(우유)는 컵 위에서 기울이고 붓는 소리를 냅니다.
         if (_rect != null && kind == BeverageToolKind.Milk)
         {
             _rect.localRotation = Quaternion.Euler(0f, 0f, over ? tiltDegrees : 0f);
@@ -181,7 +177,6 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (!_dragging || !_overCup || !CanOperate())
             return;
 
-        // 우유만 홀드하는 동안 천천히 차오릅니다. 나머지는 드롭 시 1씩.
         if (kind == BeverageToolKind.Milk)
             PourMilk();
     }
@@ -217,7 +212,7 @@ public class BeverageTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 sfx = "lid_close";
                 break;
             default:
-                return; // Milk는 컵 위 홀드로 처리됨
+                return;
         }
 
         if (ok)

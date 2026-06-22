@@ -2,9 +2,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 3x3 Merge 그리드 UI입니다. 슬롯은 에디터에서 직접 배치합니다.
-/// </summary>
+/// <summary>3x3 Merge 그리드 UI입니다.</summary>
 [RequireComponent(typeof(GridLayoutGroup))]
 public class MergeGridUI : MonoBehaviour
 {

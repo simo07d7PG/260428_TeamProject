@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Manager 컴포넌트 자동 장착 유틸리티입니다.
-/// </summary>
+/// <summary>Manager 컴포넌트 자동 장착 유틸리티입니다.</summary>
 public static class ManagerUtility
 {
     public static T GetOrAddComponent<T>(GameObject target) where T : Component

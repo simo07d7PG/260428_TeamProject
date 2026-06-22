@@ -3,9 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 발주 UI의 재료 한 줄(이름, 단가, 수량 조절)을 표시합니다.
-/// </summary>
+/// <summary>발주 UI의 재료 한 줄(이름, 단가, 수량 조절)을 표시합니다.</summary>
 public class SupplyOrderRowUI : MonoBehaviour
 {
     [SerializeField] TextMeshProUGUI nameText;

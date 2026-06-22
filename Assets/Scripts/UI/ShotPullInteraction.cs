@@ -2,10 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 에스프레소 머신 버튼을 홀드하는 조작입니다.
-/// 누르고 있는 동안 게이지가 차고, 떼는 순간의 홀드 시간으로 추출 품질이 판정됩니다.
-/// </summary>
+/// <summary>에스프레소 머신 버튼을 홀드하는 조작입니다.</summary>
 public class ShotPullInteraction : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField] BeverageStationUI station;

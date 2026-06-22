@@ -1,12 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 효과음을 재생하는 싱글톤 매니저입니다. 클립은 Resources/Audio/{key} 에서 선택적으로 로드합니다.
-/// 에셋이 없으면 조용히 무시하며(에러 없음), 기존 매니저 이벤트에 구독해 자동 재생합니다.
-/// 사용자가 Resources/Audio 에 다음 이름의 클립을 넣으면 소리가 납니다:
-/// merge_success, coin, serve_fail, customer_arrive, customer_leave, drink_complete
-/// </summary>
+/// <summary>효과음을 재생하는 싱글톤 매니저입니다. 클립은 Resources/Audio/{key} 에서 선택적으로 로드합니다.</summary>
 [DefaultExecutionOrder(-50)]
 public class AudioManager : MonoBehaviour
 {
@@ -42,7 +37,6 @@ public class AudioManager : MonoBehaviour
         PlayBgm();
     }
 
-    /// <summary>BGM을 루프 재생합니다. 인스펙터(CafeAssetConfig.Bgm) → Resources/Bgm/MP_Background 폴백.</summary>
     void PlayBgm()
     {
         if (_bgmSource == null)
@@ -84,7 +78,6 @@ public class AudioManager : MonoBehaviour
 
     AudioClip Resolve(string key)
     {
-        // 인스펙터(CafeAssetConfig) 지정이 최우선.
         AudioClip configured = CafeAssetConfig.Instance != null ? CafeAssetConfig.Instance.GetSfx(key) : null;
         if (configured != null)
             return configured;
@@ -95,7 +88,6 @@ public class AudioManager : MonoBehaviour
         AudioClip clip = Resources.Load<AudioClip>($"Audio/{key}");
         if (clip == null)
         {
-            // 이미 존재하는 Resources/Bgm/* 효과음 에셋을 키에 매핑해 살립니다.
             string bgmFile = MapToBgmFile(key);
             if (bgmFile != null)
                 clip = Resources.Load<AudioClip>($"Bgm/{bgmFile}");

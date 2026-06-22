@@ -1,10 +1,7 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// 정산(Closing) 단계를 처리하는 싱글톤 매니저입니다.
-/// 영업 종료 시 매출·폐기 비용·순이익을 계산하고, '다음 날 시작'으로 진행과 저장을 처리합니다.
-/// </summary>
+/// <summary>정산(Closing) 단계를 처리하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-6)]
 public class ClosingManager : MonoBehaviour
 {
@@ -130,7 +127,6 @@ public class ClosingManager : MonoBehaviour
         }
     }
 
-    /// <summary>다음 날로 진행합니다. 일차 증가, 준비 초기화, 상태 전환, 저장.</summary>
     public void AdvanceToNextDay()
     {
         if (GameManager.Instance == null)

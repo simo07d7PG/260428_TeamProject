@@ -2,9 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 현재 활성 트렌드를 상단 배너로 표시하고 TrendManager와 연동합니다.
-/// </summary>
+/// <summary>현재 활성 트렌드를 상단 배너로 표시하고 TrendManager와 연동합니다.</summary>
 public class TrendBannerUIController : MonoBehaviour
 {
     RectTransform _banner;
@@ -16,7 +14,22 @@ public class TrendBannerUIController : MonoBehaviour
     {
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
-        BuildBanner();
+
+        RectTransform existing = transform.Find("TrendBanner") as RectTransform;
+        if (existing != null)
+            BindBanner(existing);
+        else
+            BuildBanner();
+
+        UIFontUtility.ApplyToHierarchy(transform);
+    }
+
+    /// <summary>에디터에서 씬에 배너를 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("TrendBanner") == null)
+            BuildBanner();
         UIFontUtility.ApplyToHierarchy(transform);
     }
 
@@ -38,6 +51,12 @@ public class TrendBannerUIController : MonoBehaviour
     {
         if (PreparationManager.Instance != null && TrendManager.Instance == null)
             ManagerUtility.GetOrAddComponent<TrendManager>(PreparationManager.Instance.gameObject);
+    }
+
+    void BindBanner(RectTransform banner)
+    {
+        _banner = banner;
+        _text = banner.Find("TrendText")?.GetComponent<TextMeshProUGUI>();
     }
 
     void BuildBanner()

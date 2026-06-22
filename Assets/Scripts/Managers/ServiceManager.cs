@@ -1,10 +1,7 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// 영업 루프를 총괄하는 싱글톤 매니저입니다.
-/// 준비→영업 전환, 손님 선택 시 제작 시작, 서빙 평가·지급, 4분 타이머, 영업 종료를 처리합니다.
-/// </summary>
+/// <summary>영업 루프를 총괄하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-8)]
 public class ServiceManager : MonoBehaviour
 {
@@ -88,7 +85,6 @@ public class ServiceManager : MonoBehaviour
         _customerSubscribed = false;
     }
 
-    /// <summary>준비 단계에서 영업을 시작합니다. (영업 시작 버튼)</summary>
     public bool StartService()
     {
         if (GameManager.Instance == null)
@@ -169,7 +165,6 @@ public class ServiceManager : MonoBehaviour
         return TryServe(CustomerManager.Instance?.Selected, out message);
     }
 
-    /// <summary>완성된 음료를 지정 손님에게 전달하고 평가·지급합니다.</summary>
     public bool TryServe(Customer customer, out string message)
     {
         message = string.Empty;
@@ -215,15 +210,13 @@ public class ServiceManager : MonoBehaviour
         if (score == null || !score.IsCorrectMenu || score.PayoutMultiplier <= 0f)
             return 0;
 
-        float patienceModifier = 1f + (customer.PatienceRatio - 0.5f) * 0.7f; // 0.65 ~ 1.35
+        float patienceModifier = 1f + (customer.PatienceRatio - 0.5f) * 0.7f;
         float menuMultiplier = GetMenuMultiplier(customer.Order);
-        // 머지로 만든 Lv2 프리미엄 재료를 쓰면 재료당 +12%(최대 3개 = +36%) 매출 보너스.
         float premiumMultiplier = 1f + 0.12f * Mathf.Clamp(premiumIngredients, 0, 3);
         float raw = customer.Order.BasePrice * score.PayoutMultiplier * patienceModifier * menuMultiplier * premiumMultiplier;
         return Mathf.Max(1, Mathf.RoundToInt(raw));
     }
 
-    /// <summary>트렌드 배수를 적용합니다. (Phase 8)</summary>
     float GetMenuMultiplier(CustomerOrder order)
     {
         return TrendManager.Instance != null ? TrendManager.Instance.GetOrderMultiplier(order) : 1f;

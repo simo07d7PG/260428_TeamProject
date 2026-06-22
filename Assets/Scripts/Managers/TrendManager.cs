@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 일자별 트렌드를 관리하는 싱글톤 매니저입니다. (기존 TrendSO 활용)
-/// 활성 트렌드의 multiplier를 해당 재료 타입을 사용하는 메뉴 매출에 적용하고,
-/// 다음 트렌드를 예고합니다.
-/// </summary>
+/// <summary>일자별 트렌드를 관리하는 싱글톤 매니저입니다. 활성 트렌드의 multiplier를 메뉴 매출에 적용합니다.</summary>
 [DefaultExecutionOrder(-7)]
 public class TrendManager : MonoBehaviour
 {
@@ -125,7 +121,6 @@ public class TrendManager : MonoBehaviour
         return chosen;
     }
 
-    /// <summary>주문 메뉴가 활성 트렌드의 영향을 받으면 multiplier를, 아니면 1을 반환합니다.</summary>
     public float GetOrderMultiplier(CustomerOrder order)
     {
         if (_activeTrend == null || order == null || order.menu == null)

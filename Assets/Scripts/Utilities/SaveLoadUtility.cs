@@ -2,10 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 
-/// <summary>
-/// 게임 진행(코인, 일차)을 JSON으로 저장·로드합니다.
-/// 해금 레시피는 일차로부터 파생되므로 별도 저장하지 않습니다.
-/// </summary>
+/// <summary>게임 진행(코인, 일차)을 JSON으로 저장·로드합니다.</summary>
 public static class SaveLoadUtility
 {
     const string FileName = "cafesim_save.json";

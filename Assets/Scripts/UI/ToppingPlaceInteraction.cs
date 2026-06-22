@@ -2,10 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 토핑 모드가 켜진 동안 컵을 탭하면 그 위치에 토핑을 배치합니다.
-/// 탭 좌표를 CupCanvasUI로 정규화해 BeverageBuildManager에 전달합니다.
-/// </summary>
+/// <summary>토핑 모드가 켜진 동안 컵을 탭하면 그 위치에 토핑을 배치합니다.</summary>
 public class ToppingPlaceInteraction : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] CupCanvasUI cupCanvas;

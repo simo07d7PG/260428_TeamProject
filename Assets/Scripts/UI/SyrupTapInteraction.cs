@@ -2,10 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 시럽 병을 탭하면 컵에 시럽 방울이 추가됩니다(최대 3회).
-/// 조준 없이 컵 위쪽에 균형 있게 흩뿌려진 정규화 좌표를 생성해 전달합니다.
-/// </summary>
+/// <summary>시럽 병을 탭하면 컵에 시럽 방울이 추가됩니다(최대 3회).</summary>
 public class SyrupTapInteraction : MonoBehaviour, IPointerClickHandler
 {
     static readonly Vector2[] SyrupSpots =

@@ -2,10 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 하나의 스테이션 도구(에스프레소 머신, 밀크 피처, 시럽 병 등)를 표현하는 UI 조각입니다.
-/// 배경 버튼 이미지, 라벨, 진행 게이지를 묶어 컨트롤러가 피드백을 갱신할 수 있게 합니다.
-/// </summary>
+/// <summary>하나의 스테이션 도구를 표현하는 UI 조각입니다.</summary>
 public class BeverageStationUI : MonoBehaviour
 {
     [SerializeField] StationType station;

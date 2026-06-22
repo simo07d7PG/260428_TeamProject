@@ -2,10 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 피처를 눌러(드래그) 우유를 붓는 조작입니다.
-/// 누르고 있는 동안 게이지가 차오르며, BeverageBuildManager에 증가량을 전달합니다.
-/// </summary>
+/// <summary>피처를 눌러(드래그) 우유를 붓는 조작입니다.</summary>
 public class PourMilkInteraction : MonoBehaviour,
     IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
@@ -25,7 +22,7 @@ public class PourMilkInteraction : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData eventData) => BeginPour();
 
-    public void OnDrag(PointerEventData eventData) { /* 드래그를 흡수해 스크롤로 넘어가지 않게 합니다. */ }
+    public void OnDrag(PointerEventData eventData) { }
 
     public void OnPointerUp(PointerEventData eventData) => EndPour();
 

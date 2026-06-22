@@ -1,6 +1,4 @@
-/// <summary>
-/// Merge 시도 결과 정보입니다.
-/// </summary>
+/// <summary>Merge 시도 결과 정보입니다.</summary>
 public struct MergeResult
 {
     public MergeResultType resultType;

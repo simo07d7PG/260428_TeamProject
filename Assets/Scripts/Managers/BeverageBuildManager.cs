@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// GPGP식 음료 제작을 관리하는 싱글톤 매니저입니다.
-/// 빈 컵에서 시작해 스테이션별 조작(샷 홀드, 밀크 붓기, 시럽/토핑 탭)으로 레이어를 쌓고,
-/// 완성 시 MenuCatalog로 메뉴를 추정합니다. 인벤토리 소비는 PreparationManager에 위임합니다.
-/// </summary>
+/// <summary>GPGP식 음료 제작을 관리하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-4)]
 public class BeverageBuildManager : MonoBehaviour
 {
@@ -70,7 +66,6 @@ public class BeverageBuildManager : MonoBehaviour
             && GameManager.Instance.CurrentState == GameState.Service;
     }
 
-    /// <summary>지정 타입 재료의 보유 수량(Lv1+Lv2 합)을 반환합니다. UI 재고 표시용.</summary>
     public int CountAvailable(IngredientType type)
     {
         PreparationManager prep = PreparationManager.Instance;
@@ -93,7 +88,6 @@ public class BeverageBuildManager : MonoBehaviour
         return count;
     }
 
-    /// <summary>특정 재료(SO)의 보유 수량을 반환합니다. (재료 변경 칸의 '남음' 표시)</summary>
     public int CountAvailable(IngredientSO ingredient)
     {
         if (ingredient == null || PreparationManager.Instance == null)
@@ -103,7 +97,6 @@ public class BeverageBuildManager : MonoBehaviour
             + PreparationManager.Instance.GetInventoryCount(ingredient, 2);
     }
 
-    /// <summary>해당 타입에 사용할 재료를 선택합니다. (재료 변경)</summary>
     public void SetSelectedIngredient(IngredientType type, IngredientSO ingredient)
     {
         if (ingredient != null)
@@ -115,7 +108,6 @@ public class BeverageBuildManager : MonoBehaviour
         return _selected.TryGetValue(type, out IngredientSO ingredient) ? ingredient : null;
     }
 
-    /// <summary>새 음료 제작을 시작합니다. order가 null이면 손님 없는 미리보기 모드입니다.</summary>
     public void StartBuild(CustomerOrder order)
     {
         _currentOrder = order;
@@ -140,17 +132,26 @@ public class BeverageBuildManager : MonoBehaviour
         NotifyStateChanged();
     }
 
+    public void RestartBuild()
+    {
+        if (!_buildActive)
+            return;
+
+        _snapshot.Clear();
+        _lastMessage = _currentOrder != null
+            ? $"주문: {_currentOrder.phrase}"
+            : "미리보기: 자유롭게 만들어 보세요";
+        UpdateEstimate();
+        NotifyStateChanged();
+    }
+
     public void ResetSession() => ClearBuild();
 
-    // --- 스테이션 조작 ---------------------------------------------------
-
-    /// <summary>홀드 시간으로 추출 품질을 판정해 1샷을 추가합니다.</summary>
     public bool TryPullShot(float holdDuration, out string message)
     {
         return TryAddShot(EvaluateShotQuality(holdDuration), out message);
     }
 
-    /// <summary>샷 품질(0~1)을 직접 받아 1샷을 추가합니다. (머신 게이지 정지 지점으로 품질 결정)</summary>
     public bool TryAddShot(float quality01, out string message)
     {
         message = string.Empty;
@@ -182,10 +183,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// 추출 홀드를 시작할 때 원두 1개를 먼저 소비합니다(홀드 시작 시점).
-    /// 이후 성공/실패/취소와 무관하게 차감되며, 소비한 원두 정보를 반환해 종료 시 샷 추가에 씁니다.
-    /// </summary>
     public bool TryBeginShot(out IngredientSO bean, out int level, out string message)
     {
         bean = null;
@@ -211,7 +208,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>이미 소비한 원두로 1샷을 추가합니다(홀드 종료, 품질 확정). 추가 소비는 없습니다.</summary>
     public bool AddPulledShot(float quality01, IngredientSO bean, int level, out string message)
     {
         message = string.Empty;
@@ -240,7 +236,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>피처→컵 드래그로 밀크를 붓습니다. deltaAmount는 이번 프레임 증가량(0~1).</summary>
     public bool TryPourMilk(float deltaAmount, out string message)
     {
         message = string.Empty;
@@ -264,7 +259,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>시럽 병 탭. 최대 3회. tapPosition은 컵 위 정규화 좌표.</summary>
     public bool TryAddSyrup(Vector2 tapPosition, out string message)
     {
         message = string.Empty;
@@ -294,7 +288,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>토핑(휘핑/과일) 탭 배치. tapPosition은 컵 위 정규화 좌표.</summary>
     public bool TryAddTopping(Vector2 tapPosition, out string message)
     {
         message = string.Empty;
@@ -349,7 +342,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    /// <summary>제작을 완료하고 메뉴를 확정 추정합니다.</summary>
     public bool CompleteBuild(out string message)
     {
         message = string.Empty;
@@ -381,8 +373,6 @@ public class BeverageBuildManager : MonoBehaviour
         return true;
     }
 
-    // --- 내부 ------------------------------------------------------------
-
     bool GuardOperate(out string message)
     {
         if (!CanOperate())
@@ -413,17 +403,12 @@ public class BeverageBuildManager : MonoBehaviour
             : match != null ? match.menuName : "알 수 없는 음료";
     }
 
-    /// <summary>
-    /// 지정 타입의 재료를 인벤토리에서 찾아 소비합니다. Lv2를 우선합니다.
-    /// 미리보기 모드(손님 없음)에서 재고가 없으면 DataManager의 대표 재료로 대체하고 소비하지 않습니다.
-    /// </summary>
     bool TryResolveAndConsume(IngredientType type, out IngredientSO ingredient, out int level)
     {
         ingredient = null;
         level = 1;
 
-        // 재료 변경으로 선택된 재료가 있으면 '그 재료만' 소비합니다.
-        // (표시되는 선택 재료의 수량과 실제 소비가 항상 일치하도록 — 다른 SO로 새지 않음)
+        // 선택된 재료가 있으면 그 재료만 소비(표시 수량과 실제 소비를 항상 일치시킴).
         IngredientSO selected = GetSelectedIngredient(type);
         if (selected != null)
         {
@@ -433,7 +418,17 @@ public class BeverageBuildManager : MonoBehaviour
                 return true;
             }
 
-            // 선택 재료가 떨어졌을 때: 미리보기는 대체, 실제 영업은 실패(재료 변경 유도).
+            if (TryFindInventoryIngredient(type, out IngredientSO fallback, out int fbLevel)
+                && (SupplyManager.Instance == null || SupplyManager.Instance.CanCraftRequiring(fallback))
+                && PreparationManager.Instance != null
+                && PreparationManager.Instance.TryConsumeFromInventory(fallback, fbLevel))
+            {
+                SetSelectedIngredient(type, fallback);
+                ingredient = fallback;
+                level = fbLevel;
+                return true;
+            }
+
             if (IsPreview)
             {
                 ingredient = selected;
@@ -456,7 +451,6 @@ public class BeverageBuildManager : MonoBehaviour
             return false;
         }
 
-        // 미리보기: 재고가 없어도 3단계 흐름을 테스트할 수 있도록 대표 재료로 대체.
         if (IsPreview)
         {
             ingredient = GetRepresentativeIngredient(type);

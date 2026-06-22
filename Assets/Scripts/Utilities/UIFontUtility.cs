@@ -1,9 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-/// <summary>
-/// 런타임 UI 텍스트에 한글 지원 TMP 폰트를 일관되게 적용합니다.
-/// </summary>
+/// <summary>런타임 UI 텍스트에 한글 지원 TMP 폰트를 일관되게 적용합니다.</summary>
 public static class UIFontUtility
 {
     const string PrimaryFontPath = "Fonts/Pretendard-Medium SDF";

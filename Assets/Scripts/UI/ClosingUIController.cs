@@ -5,26 +5,20 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 정산(Closing) 화면을 표시하고 ClosingManager와 연동합니다.
-/// 매출/폐기/순이익, 해금 예고, 다음 날 시작 버튼을 제공합니다.
-/// 숫자 카운트업·등급 스탬프·순차 페이드 등 '하루 결산' 연출을 코루틴으로 처리합니다.
-/// </summary>
+/// <summary>정산(Closing) 화면을 표시하고 ClosingManager와 연동합니다.</summary>
 public class ClosingUIController : MonoBehaviour
 {
-    // 연출 타이밍 상수.
-    const float CountUpDuration = 0.6f;   // 카운트업 지속 시간(초).
-    const float RowFadeDuration = 0.28f;  // 행 1개 페이드 인 시간(초).
-    const float RowStagger = 0.10f;       // 행 간 등장 딜레이(초).
+    const float CountUpDuration = 0.6f;
+    const float RowFadeDuration = 0.28f;
+    const float RowStagger = 0.10f;
     const float StampPunchDuration = 0.35f;
 
-    /// <summary>카운트업으로 증가시킬 수치 행 1개를 표현합니다.</summary>
     class SettlementRow
     {
         public RectTransform Root;
         public CanvasGroup Group;
         public TextMeshProUGUI ValueLabel;
-        public string Prefix = string.Empty; // 부호/접두(예: "-").
+        public string Prefix = string.Empty;
         public string Suffix = " Coin";
         public int TargetValue;
     }
@@ -35,7 +29,6 @@ public class ClosingUIController : MonoBehaviour
     TextMeshProUGUI _gradeStamp;
     RectTransform _gradeStampRect;
 
-    // 정산 수치 행(카운트업 대상).
     SettlementRow _revenueRow;
     SettlementRow _garbageRow;
     SettlementRow _leftoverRow;
@@ -59,7 +52,22 @@ public class ClosingUIController : MonoBehaviour
     {
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
-        BuildPanel();
+
+        RectTransform existing = FindDeepChild(transform, "SettlementPanel") as RectTransform;
+        if (existing != null)
+            Bind(existing);
+        else
+            BuildPanel();
+
+        UIFontUtility.ApplyToHierarchy(transform);
+    }
+
+    /// <summary>에디터에서 씬에 정산 패널을 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (FindDeepChild(transform, "SettlementPanel") == null)
+            BuildPanel();
         UIFontUtility.ApplyToHierarchy(transform);
     }
 
@@ -121,7 +129,6 @@ public class ClosingUIController : MonoBehaviour
         titleRect.offsetMin = new Vector2(24f, -56f);
         titleRect.offsetMax = new Vector2(-24f, -14f);
 
-        // 등급 스탬프: 패널 우상단에 '쾅' 찍히듯 등장.
         _gradeStamp = UIFactoryUtility.CreateLabel(_panel, "GradeStamp", string.Empty, 30f);
         _gradeStamp.fontStyle = FontStyles.Bold;
         _gradeStamp.color = new Color(1f, 0.84f, 0.32f, 1f);
@@ -132,7 +139,6 @@ public class ClosingUIController : MonoBehaviour
         _gradeStampRect.anchoredPosition = new Vector2(0f, -64f);
         _gradeStampRect.sizeDelta = new Vector2(480f, 48f);
 
-        // 수치 행들을 위에서 아래로 쌓는다.
         float y = -128f;
         const float rowStep = 40f;
 
@@ -154,7 +160,6 @@ public class ClosingUIController : MonoBehaviour
         _coinRow = BuildRow("Coin", "보유 코인", y, new Color(1f, 0.86f, 0.36f));
         y -= rowStep + 14f;
 
-        // 서빙 성공: 텍스트 + 막대 + 별점.
         _servedText = BuildLeftLabel("ServedText", string.Empty, y, 17f, new Color(0.88f, 0.9f, 0.95f));
         RegisterSequential(_servedText);
         y -= 28f;
@@ -201,7 +206,90 @@ public class ClosingUIController : MonoBehaviour
         nextButton.onClick.AddListener(OnNextDayClicked);
     }
 
-    /// <summary>라벨(좌)·값(우)로 구성된 수치 행을 생성합니다. CanvasGroup으로 페이드 제어.</summary>
+    void Bind(RectTransform panel)
+    {
+        _panel = panel;
+        _overlay = panel.parent as RectTransform;
+
+        _titleText = panel.Find("Title")?.GetComponent<TextMeshProUGUI>();
+
+        _gradeStamp = panel.Find("GradeStamp")?.GetComponent<TextMeshProUGUI>();
+        _gradeStampRect = _gradeStamp != null ? _gradeStamp.rectTransform : null;
+
+        _sequentialGroups.Clear();
+
+        _revenueRow = BindRow(panel, "Revenue", string.Empty);
+        _garbageRow = BindRow(panel, "Garbage", "-");
+        _leftoverRow = BindRow(panel, "Leftover", "-");
+        _netProfitRow = BindRow(panel, "NetProfit", string.Empty);
+        _coinRow = BindRow(panel, "Coin", string.Empty);
+
+        _servedText = panel.Find("Line_ServedText/ServedText")?.GetComponent<TextMeshProUGUI>();
+        RegisterSequential(_servedText);
+
+        Transform servedBar = panel.Find("ServedBar");
+        if (servedBar != null)
+        {
+            _servedBarFill = servedBar.Find("Fill")?.GetComponent<Image>();
+            CanvasGroup barGroup = servedBar.GetComponent<CanvasGroup>();
+            if (barGroup != null)
+                _sequentialGroups.Add(barGroup);
+        }
+
+        _starsText = panel.Find("Line_Stars/Stars")?.GetComponent<TextMeshProUGUI>();
+        RegisterSequential(_starsText);
+
+        _mergeText = panel.Find("Line_Merge/Merge")?.GetComponent<TextMeshProUGUI>();
+        RegisterSequential(_mergeText);
+
+        _footerText = panel.Find("Line_Footer/Footer")?.GetComponent<TextMeshProUGUI>();
+        RegisterSequential(_footerText);
+
+        Button nextButton = panel.Find("NextDayButton")?.GetComponent<Button>();
+        if (nextButton != null)
+        {
+            nextButton.onClick.RemoveListener(OnNextDayClicked);
+            nextButton.onClick.AddListener(OnNextDayClicked);
+        }
+    }
+
+    SettlementRow BindRow(RectTransform panel, string name, string prefix)
+    {
+        RectTransform rowRect = panel.Find($"Row_{name}") as RectTransform;
+        if (rowRect == null)
+            return new SettlementRow();
+
+        CanvasGroup group = rowRect.GetComponent<CanvasGroup>();
+        TextMeshProUGUI valueLabel = rowRect.Find("Value")?.GetComponent<TextMeshProUGUI>();
+
+        if (group != null)
+            _sequentialGroups.Add(group);
+
+        return new SettlementRow
+        {
+            Root = rowRect,
+            Group = group,
+            ValueLabel = valueLabel,
+            Prefix = prefix
+        };
+    }
+
+    static Transform FindDeepChild(Transform root, string name)
+    {
+        if (root == null)
+            return null;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child.name == name)
+                return child;
+            Transform found = FindDeepChild(child, name);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
     SettlementRow BuildRow(string name, string caption, float y, Color valueColor)
     {
         GameObject rowObject = UIFactoryUtility.CreateUIObject($"Row_{name}", _panel, typeof(CanvasGroup));
@@ -243,7 +331,6 @@ public class ClosingUIController : MonoBehaviour
         };
     }
 
-    /// <summary>왼쪽 정렬 단일 라벨을 생성합니다(서빙/별/머지/푸터용). CanvasGroup 부착.</summary>
     TextMeshProUGUI BuildLeftLabel(string name, string text, float y, float fontSize, Color color)
     {
         GameObject host = UIFactoryUtility.CreateUIObject($"Line_{name}", _panel, typeof(CanvasGroup));
@@ -265,6 +352,9 @@ public class ClosingUIController : MonoBehaviour
 
     void RegisterSequential(TextMeshProUGUI label)
     {
+        if (label == null)
+            return;
+
         CanvasGroup group = label.rectTransform.parent.GetComponent<CanvasGroup>();
         if (group != null)
             _sequentialGroups.Add(group);
@@ -304,14 +394,12 @@ public class ClosingUIController : MonoBehaviour
         if (_titleText != null)
             _titleText.text = UIFontUtility.Sanitize($"Day {settlement.Day} 정산");
 
-        // 카운트업 목표값 설정.
         _revenueRow.TargetValue = settlement.Revenue;
         _garbageRow.TargetValue = settlement.GarbageCost;
         _leftoverRow.TargetValue = settlement.LeftoverCost;
         _netProfitRow.TargetValue = settlement.NetProfit;
         _coinRow.TargetValue = settlement.CoinAfter;
 
-        // 서빙 통계.
         int target = CustomerManager.Instance != null ? CustomerManager.Instance.CustomersPerDay : 0;
         int totalCustomers = target > 0 ? target : settlement.ServedCount + settlement.LeftCount;
         float servedRatio = totalCustomers > 0
@@ -332,7 +420,6 @@ public class ClosingUIController : MonoBehaviour
         if (_footerText != null)
             _footerText.text = UIFontUtility.Sanitize(BuildFooter(settlement));
 
-        // 재진입 안전: 진행 중 연출 정리 후 다시 시작.
         StopPresentRoutine();
         _presentRoutine = StartCoroutine(PresentRoutine(settlement, servedRatio));
     }
@@ -361,7 +448,6 @@ public class ClosingUIController : MonoBehaviour
 
     IEnumerator PresentRoutine(DailySettlement settlement, float servedRatio)
     {
-        // 초기화: 모든 순차 그룹을 숨기고, 값/스탬프 리셋.
         foreach (CanvasGroup group in _sequentialGroups)
         {
             if (group != null)
@@ -383,7 +469,6 @@ public class ClosingUIController : MonoBehaviour
             _gradeStampRect.localScale = Vector3.zero;
         }
 
-        // 순차 페이드 인 + 행 카운트업.
         var rowByGroup = new Dictionary<CanvasGroup, SettlementRow>();
         if (_revenueRow.Group != null) rowByGroup[_revenueRow.Group] = _revenueRow;
         if (_garbageRow.Group != null) rowByGroup[_garbageRow.Group] = _garbageRow;
@@ -404,11 +489,9 @@ public class ClosingUIController : MonoBehaviour
             yield return WaitUnscaled(RowStagger);
         }
 
-        // 서빙 막대 채우기.
         if (_servedBarFill != null)
             yield return FillBar(_servedBarFill, servedRatio);
 
-        // 등급 스탬프 '쾅'.
         if (_gradeStampRect != null && !string.IsNullOrEmpty(settlement.Grade))
             yield return StampGrade(settlement.Grade);
 
@@ -444,7 +527,6 @@ public class ClosingUIController : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float k = Mathf.Clamp01(t / CountUpDuration);
-            // EaseOut 느낌으로 가속 후 감속.
             float eased = 1f - (1f - k) * (1f - k);
             SetRowValue(row, Mathf.RoundToInt(Mathf.Lerp(0f, targetValue, eased)));
             yield return null;
@@ -484,7 +566,6 @@ public class ClosingUIController : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float k = Mathf.Clamp01(t / StampPunchDuration);
-            // 1.6 -> 1.0 EaseOut 펀치.
             float eased = 1f - (1f - k) * (1f - k);
             float scale = Mathf.Lerp(1.6f, 1f, eased);
             _gradeStampRect.localScale = Vector3.one * scale;

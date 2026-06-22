@@ -3,10 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 런타임 UI 생성용 공통 헬퍼입니다. (Phase 6 이후 패널에서 공유)
-/// 폰트 적용·Sanitize를 일관되게 처리합니다.
-/// </summary>
+/// <summary>런타임 UI 생성용 공통 헬퍼입니다.</summary>
 public static class UIFactoryUtility
 {
     public static GameObject CreateUIObject(string name, Transform parent, params Type[] components)
@@ -57,14 +54,13 @@ public static class UIFactoryUtility
         Image image = buttonObject.GetComponent<Image>();
         image.color = color;
 
-        // 호버/프레스/비활성 트랜지션을 모든 버튼에 일관 적용.
         Button button = buttonObject.GetComponent<Button>();
         button.transition = Selectable.Transition.ColorTint;
         button.targetGraphic = image;
         ColorBlock cb = button.colors;
         cb.normalColor = Color.white;
-        cb.highlightedColor = new Color(1.18f, 1.18f, 1.18f, 1f); // 호버 시 밝게
-        cb.pressedColor = new Color(0.82f, 0.82f, 0.82f, 1f);      // 누를 때 어둡게
+        cb.highlightedColor = new Color(1.18f, 1.18f, 1.18f, 1f);
+        cb.pressedColor = new Color(0.82f, 0.82f, 0.82f, 1f);
         cb.selectedColor = Color.white;
         cb.disabledColor = new Color(0.55f, 0.55f, 0.55f, 0.6f);
         cb.colorMultiplier = 1f;
@@ -102,7 +98,6 @@ public static class UIFactoryUtility
         rect.pivot = new Vector2(0.5f, 0.5f);
     }
 
-    /// <summary>Canvas 하위 UI 호스트를 전체 화면으로 스트레치합니다. (런타임 호스트 공통 설정)</summary>
     public static void StretchHost(RectTransform host)
     {
         if (host == null)

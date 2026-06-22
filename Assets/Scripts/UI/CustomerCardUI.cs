@@ -3,9 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 대기열의 손님 한 명을 표시하는 카드입니다. 아이콘, 주문 대사, 인내심 바, 선택 버튼을 묶습니다.
-/// </summary>
+/// <summary>대기열의 손님 한 명을 표시하는 카드입니다.</summary>
 public class CustomerCardUI : MonoBehaviour
 {
     static readonly Color NormalBg = new(0.16f, 0.18f, 0.22f, 0.96f);
@@ -63,7 +61,6 @@ public class CustomerCardUI : MonoBehaviour
             iconImage.enabled = icon != null;
         }
 
-        // 손님 캐릭터 머리(변형별). 표정은 Refresh에서 인내심/상태에 따라 갱신.
         if (headImage != null)
         {
             Sprite head = ResolveHead(customer != null ? customer.CharacterIndex : 0);
@@ -108,7 +105,6 @@ public class CustomerCardUI : MonoBehaviour
             patienceFill.color = CafeTheme.PatienceColor(ratio);
         }
 
-        // 표정: 상태/인내심에 따라 변경(머리 위에 오버레이). 변할 때만 교체.
         if (faceImage != null)
         {
             CustomerMood mood = _customer.Mood;

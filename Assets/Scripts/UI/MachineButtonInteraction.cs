@@ -2,25 +2,21 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 에스프레소 머신 버튼입니다. 컵이 도킹된 상태에서 홀드하면 다이얼 바늘이 시계방향으로 돕니다.
-/// 바늘이 초록(안전) 구역에서 떼면 완벽한 샷, 빨강(과추출) 구역이면 품질이 떨어집니다.
-/// 안전 구역이 넓어 예측·조작이 쉽습니다.
-/// </summary>
+/// <summary>에스프레소 머신 버튼입니다. 컵이 도킹된 상태에서 홀드하면 다이얼 바늘이 시계방향으로 돕니다.</summary>
 public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
 {
-    public const float MinFill = 0.5f;    // 이만큼은 채워야 1샷
-    public const float SweetMin = 0.74f;  // 초록(안전) 시작 (각도 266도)
-    public const float SweetMax = 1.0f;   // 초록 끝 (한 바퀴 = 360도)
-    public const float MaxFill = 1.12f;    // 빨강(과추출) 상한
+    public const float MinFill = 0.5f;
+    public const float SweetMin = 0.74f;
+    public const float SweetMax = 1.0f;
+    public const float MaxFill = 1.12f;
 
     [SerializeField] RectTransform needle;
     [SerializeField] CupDragHandler cup;
-    [SerializeField] float fillPerSecond = 0.62f; // 한 바퀴 약 1.6초
+    [SerializeField] float fillPerSecond = 0.62f;
 
     bool _holding;
     float _fill;
-    IngredientSO _heldBean; // 홀드 시작 시 소비한 원두
+    IngredientSO _heldBean;
     int _heldLevel = 1;
 
     public Action<string> OnResult;
@@ -45,7 +41,6 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
             return;
         }
 
-        // 홀드 시작 시 원두를 먼저 소비합니다. 취소/실패해도 차감됩니다.
         if (BeverageBuildManager.Instance == null)
         {
             OnResult?.Invoke("커피 머신을 준비 중입니다.");
@@ -85,7 +80,6 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
         }
         else
         {
-            // 초록 이전에 떼면 원두를 버립니다.
             OnResult?.Invoke("추출 실패 — 원두를 버렸습니다.");
         }
 
@@ -102,7 +96,6 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
 
         if (!Ready())
         {
-            // 홀드 도중 컵이 빠지면 취소 — 이미 소비한 원두는 버려집니다.
             _holding = false;
             _heldBean = null;
             _heldLevel = 1;
@@ -118,9 +111,8 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
 
     void UpdateNeedle()
     {
-        // 전체 채움 범위(0~MaxFill)를 한 바퀴(360도)에 매핑해 3색 구역과 정확히 일치시킵니다.
         if (needle != null)
-            needle.localEulerAngles = new Vector3(0f, 0f, -(_fill / MaxFill) * 360f); // 시계방향
+            needle.localEulerAngles = new Vector3(0f, 0f, -(_fill / MaxFill) * 360f);
     }
 
     static float QualityFromFill(float fill)

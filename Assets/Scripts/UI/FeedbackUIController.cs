@@ -3,10 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 코인 획득·머지 성공·음료 완성 등에 대한 떠다니는 텍스트/파티클 피드백을 코드로 생성합니다.
-/// 에셋 없이 런타임 합성하며, 입력을 가리지 않는 최상단 오버레이에 표시합니다.
-/// </summary>
+/// <summary>코인 획득·머지 성공·음료 완성 등에 대한 떠다니는 텍스트/파티클 피드백을 코드로 생성합니다.</summary>
 public class FeedbackUIController : MonoBehaviour
 {
     RectTransform _overlay;
@@ -17,7 +14,20 @@ public class FeedbackUIController : MonoBehaviour
     void Awake()
     {
         ConfigureHostTransform(transform as RectTransform);
-        BuildOverlay();
+
+        RectTransform existing = transform.Find("FeedbackOverlay") as RectTransform;
+        if (existing != null)
+            BindOverlay(existing);
+        else
+            BuildOverlay();
+    }
+
+    /// <summary>에디터에서 씬에 오버레이 컨테이너를 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("FeedbackOverlay") == null)
+            BuildOverlay();
     }
 
     void Start()
@@ -30,12 +40,16 @@ public class FeedbackUIController : MonoBehaviour
         Unsubscribe();
     }
 
+    void BindOverlay(RectTransform overlay)
+    {
+        _overlay = overlay;
+    }
+
     void BuildOverlay()
     {
         GameObject overlayObject = UIFactoryUtility.CreateUIObject("FeedbackOverlay", transform);
         _overlay = overlayObject.GetComponent<RectTransform>();
         UIFactoryUtility.StretchFull(_overlay);
-        // 그래픽 컴포넌트가 없으므로 레이캐스트를 막지 않습니다.
     }
 
     void Subscribe()
@@ -76,8 +90,6 @@ public class FeedbackUIController : MonoBehaviour
         _subscribed = false;
     }
 
-    // --- 이벤트 핸들러 ---
-
     void HandleServed(Customer customer, ServingScoreBreakdown score, int payout)
     {
         if (payout > 0)
@@ -93,7 +105,6 @@ public class FeedbackUIController : MonoBehaviour
 
     void HandleMerge(MergeResult result)
     {
-        // 성공 텍스트는 MergeUIController가 이미 표시하므로 여기선 스파클만.
         if (result.resultType == MergeResultType.Success)
             SpawnBurst(new Vector2(0f, 0f), new Color(1f, 0.92f, 0.5f), 12);
     }
@@ -149,8 +160,6 @@ public class FeedbackUIController : MonoBehaviour
         if (wisp != null)
             Destroy(wisp.gameObject);
     }
-
-    // --- 스폰 ---
 
     void SpawnFloatingText(Vector2 anchoredPos, string text, Color color, float fontSize)
     {
@@ -225,7 +234,7 @@ public class FeedbackUIController : MonoBehaviour
         {
             t += Time.unscaledDeltaTime;
             float k = Mathf.Clamp01(t / duration);
-            rect.anchoredPosition = start + velocity * k - new Vector2(0f, 24f * k * k); // 약한 중력
+            rect.anchoredPosition = start + velocity * k - new Vector2(0f, 24f * k * k);
             spark.color = new Color(baseColor.r, baseColor.g, baseColor.b, 1f - k);
             rect.localScale = Vector3.one * (1f - 0.5f * k);
             yield return null;

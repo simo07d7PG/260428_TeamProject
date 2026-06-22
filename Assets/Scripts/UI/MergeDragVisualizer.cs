@@ -2,9 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-/// <summary>
-/// Merge UI 드래그 중 커서를 따라다니는 고스트 아이콘을 표시합니다.
-/// </summary>
+/// <summary>Merge UI 드래그 중 커서를 따라다니는 고스트 아이콘을 표시합니다.</summary>
 public static class MergeDragVisualizer
 {
     const float GhostScale = 1.1f;

@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 영업 중 손님 도착, 대기열, 인내심을 관리하는 싱글톤 매니저입니다.
-/// Service 상태에 진입하면 자동으로 영업을 시작하고, 일정 간격으로 손님을 스폰합니다.
-/// </summary>
+/// <summary>영업 중 손님 도착, 대기열, 인내심을 관리하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-6)]
 public class CustomerManager : MonoBehaviour
 {
@@ -122,10 +119,6 @@ public class CustomerManager : MonoBehaviour
         OnQueueChanged?.Invoke();
     }
 
-    /// <summary>
-    /// 영업 종료(타이머 만료 등) 시 대기열에 남은 손님을 노쇼(Left)로 마감합니다.
-    /// 정산 카운트 정확도를 위해 정산 직전 호출합니다. (호출 순서에 무관하도록 idempotent)
-    /// </summary>
     public void FinalizeNoShows()
     {
         bool any = false;
@@ -181,7 +174,7 @@ public class CustomerManager : MonoBehaviour
 
         int variants = CafeAssetConfig.Instance != null && CafeAssetConfig.Instance.CustomerVariantCount > 0
             ? CafeAssetConfig.Instance.CustomerVariantCount
-            : 3; // Resources/Characters/NPCBody1~3 기준
+            : 3;
         customer.CharacterIndex = UnityEngine.Random.Range(0, variants);
 
         _queue.Add(customer);
@@ -238,7 +231,6 @@ public class CustomerManager : MonoBehaviour
             OnQueueChanged?.Invoke();
     }
 
-    /// <summary>손님에게 음료를 전달했을 때 호출합니다. (ServingManager에서 사용)</summary>
     public void MarkServed(Customer customer)
     {
         if (customer == null || customer.State == CustomerState.Served)

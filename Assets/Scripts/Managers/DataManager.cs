@@ -2,10 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-/// <summary>
-/// Resources/ScriptableObject의 ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.
-/// 씬의 Managers 오브젝트에 GameManager와 함께 배치합니다.
-/// </summary>
+/// <summary>Resources/ScriptableObject의 ScriptableObject를 로드하고 조회하는 싱글톤 매니저입니다.</summary>
 [DefaultExecutionOrder(-90)]
 public class DataManager : MonoBehaviour
 {
@@ -41,7 +38,6 @@ public class DataManager : MonoBehaviour
     public IReadOnlyList<MergeRecipeSO> MergeRecipes => _mergeRecipes;
     public IReadOnlyList<TrendSO> Trends => _trends;
 
-    /// <summary>MenuRecipeSO 에셋(선택). 없으면 MenuCatalog의 하드코드 폴백이 사용됩니다.</summary>
     public IReadOnlyList<MenuRecipeSO> Menus => _menus;
 
     public bool IsLoaded { get; private set; }

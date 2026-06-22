@@ -1,8 +1,6 @@
 using System;
 
-/// <summary>
-/// Merge 그리드 슬롯 또는 인벤토리에 배치되는 재료 인스턴스입니다.
-/// </summary>
+/// <summary>Merge 그리드 슬롯 또는 인벤토리에 배치되는 재료 인스턴스입니다.</summary>
 [Serializable]
 public class MergeGridItem
 {

@@ -4,14 +4,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// "레시피" 버튼으로 토글하는 레시피 북입니다.
-/// 한 페이지에 레시피 하나(아이콘·제목·제조법 단계·가격/주문 예시)를 보여주고,
-/// «◀ 이전» / «다음 ▶» 버튼과 "현재/전체" 인디케이터로 페이지를 넘깁니다.
-/// </summary>
+/// <summary>"레시피" 버튼으로 토글하는 레시피 북입니다.</summary>
 public class RecipeBookUIController : MonoBehaviour
 {
-    /// <summary>한 페이지에 표시할 레시피 데이터(메뉴 또는 머지 레시피).</summary>
     class RecipePage
     {
         public string title;
@@ -39,12 +34,27 @@ public class RecipeBookUIController : MonoBehaviour
     void Awake()
     {
         ConfigureHostTransform(transform as RectTransform);
-        BuildUI();
+
+        RectTransform existing = FindDeepChild(transform, "RecipePanel") as RectTransform;
+        if (existing != null)
+            Bind(existing);
+        else
+            Build();
+
         UIFontUtility.ApplyToHierarchy(transform);
         SetOpen(false);
     }
 
-    void BuildUI()
+    /// <summary>에디터에서 씬에 레시피 북을 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (FindDeepChild(transform, "RecipePanel") == null)
+            Build();
+        UIFontUtility.ApplyToHierarchy(transform);
+    }
+
+    void Build()
     {
         Button toggleButton = UIFactoryUtility.CreateButton(
             transform as RectTransform, "RecipeToggle", "레시피", new Color(0.22f, 0.30f, 0.26f, 0.95f));
@@ -63,7 +73,7 @@ public class RecipeBookUIController : MonoBehaviour
         _panel = dimObject.GetComponent<RectTransform>();
         UIFactoryUtility.StretchFull(_panel);
         dimObject.GetComponent<Image>().color = new Color(0.03f, 0.04f, 0.06f, 0.78f);
-        dimObject.GetComponent<Button>().onClick.AddListener(() => SetOpen(false));
+        dimObject.GetComponent<Button>().onClick.AddListener(CloseFromUI);
 
         GameObject panelObject = UIFactoryUtility.CreateUIObject("RecipePanel", _panel, typeof(Image));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
@@ -85,13 +95,75 @@ public class RecipeBookUIController : MonoBehaviour
         closeRect.pivot = new Vector2(0.5f, 0f);
         closeRect.anchoredPosition = new Vector2(0f, 16f);
         closeRect.sizeDelta = new Vector2(200f, 44f);
-        closeButton.onClick.AddListener(() => SetOpen(false));
+        closeButton.onClick.AddListener(CloseFromUI);
     }
 
-    /// <summary>아이콘 / 제목 / 단계 / 푸터를 한 페이지 레이아웃으로 배치합니다.</summary>
+    void Bind(RectTransform panelRect)
+    {
+        _panel = panelRect.parent as RectTransform;
+
+        _icon = panelRect.Find("RecipeIcon")?.GetComponent<Image>();
+        _title = panelRect.Find("RecipeTitle")?.GetComponent<TextMeshProUGUI>();
+        _steps = panelRect.Find("RecipeSteps")?.GetComponent<TextMeshProUGUI>();
+        _footer = panelRect.Find("RecipeFooter")?.GetComponent<TextMeshProUGUI>();
+        _indicator = panelRect.Find("PageIndicator")?.GetComponent<TextMeshProUGUI>();
+        _prevButton = panelRect.Find("PrevButton")?.GetComponent<Button>();
+        _nextButton = panelRect.Find("NextButton")?.GetComponent<Button>();
+
+        Button toggleButton = transform.Find("RecipeToggle")?.GetComponent<Button>();
+        if (toggleButton != null)
+        {
+            toggleButton.onClick.RemoveListener(Toggle);
+            toggleButton.onClick.AddListener(Toggle);
+        }
+
+        if (_prevButton != null)
+        {
+            _prevButton.onClick.RemoveListener(Prev);
+            _prevButton.onClick.AddListener(Prev);
+        }
+
+        if (_nextButton != null)
+        {
+            _nextButton.onClick.RemoveListener(Next);
+            _nextButton.onClick.AddListener(Next);
+        }
+
+        Button dimButton = _panel != null ? _panel.GetComponent<Button>() : null;
+        if (dimButton != null)
+        {
+            dimButton.onClick.RemoveListener(CloseFromUI);
+            dimButton.onClick.AddListener(CloseFromUI);
+        }
+
+        Button closeButton = panelRect.Find("CloseButton")?.GetComponent<Button>();
+        if (closeButton != null)
+        {
+            closeButton.onClick.RemoveListener(CloseFromUI);
+            closeButton.onClick.AddListener(CloseFromUI);
+        }
+    }
+
+    void CloseFromUI() => SetOpen(false);
+
+    static Transform FindDeepChild(Transform root, string name)
+    {
+        if (root == null)
+            return null;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child.name == name)
+                return child;
+            Transform found = FindDeepChild(child, name);
+            if (found != null)
+                return found;
+        }
+        return null;
+    }
+
     void BuildPageContent(RectTransform panelRect)
     {
-        // 아이콘: 상단 중앙의 큰 정사각 이미지
         _icon = UIFactoryUtility.CreateImage(panelRect, "RecipeIcon", Color.white);
         _icon.raycastTarget = false;
         _icon.preserveAspect = true;
@@ -102,7 +174,6 @@ public class RecipeBookUIController : MonoBehaviour
         iconRect.anchoredPosition = new Vector2(0f, -40f);
         iconRect.sizeDelta = new Vector2(180f, 180f);
 
-        // 제목: 아이콘 아래, 굵고 큰 글씨
         _title = UIFactoryUtility.CreateLabel(panelRect, "RecipeTitle", string.Empty, 30f);
         _title.alignment = TextAlignmentOptions.Center;
         _title.fontStyle = FontStyles.Bold;
@@ -116,7 +187,6 @@ public class RecipeBookUIController : MonoBehaviour
         titleRect.anchoredPosition = new Vector2(0f, -236f);
         titleRect.sizeDelta = new Vector2(titleRect.sizeDelta.x, 48f);
 
-        // 제조법 단계: 좌측 정렬, 여러 줄
         _steps = UIFactoryUtility.CreateLabel(panelRect, "RecipeSteps", string.Empty, 20f);
         _steps.alignment = TextAlignmentOptions.TopLeft;
         _steps.enableWordWrapping = true;
@@ -129,7 +199,6 @@ public class RecipeBookUIController : MonoBehaviour
         stepsRect.offsetMin = new Vector2(40f, 150f);
         stepsRect.offsetMax = new Vector2(-40f, -300f);
 
-        // 푸터: 가격 + 주문 예시
         _footer = UIFactoryUtility.CreateLabel(panelRect, "RecipeFooter", string.Empty, 17f);
         _footer.alignment = TextAlignmentOptions.Top;
         _footer.enableWordWrapping = true;
@@ -144,7 +213,6 @@ public class RecipeBookUIController : MonoBehaviour
         footerRect.sizeDelta = new Vector2(footerRect.sizeDelta.x, 70f);
     }
 
-    /// <summary>이전/다음 버튼과 페이지 인디케이터를 배치합니다.</summary>
     void BuildNavigation(RectTransform panelRect)
     {
         _prevButton = UIFactoryUtility.CreateButton(
@@ -197,7 +265,6 @@ public class RecipeBookUIController : MonoBehaviour
 
     void Next() => GoTo(_index + 1);
 
-    /// <summary>지정 인덱스 페이지를 렌더링합니다. 경계는 Clamp 처리(순환 없음).</summary>
     void GoTo(int index)
     {
         if (_pages == null || _pages.Count == 0)
@@ -246,11 +313,6 @@ public class RecipeBookUIController : MonoBehaviour
             _nextButton.interactable = _index < _pages.Count - 1;
     }
 
-    // ---------------------------------------------------------------------
-    // 페이지 모델 빌드
-    // ---------------------------------------------------------------------
-
-    /// <summary>현재 일차 기준 메뉴 페이지 + 머지 레시피 페이지를 차례로 구성합니다.</summary>
     List<RecipePage> BuildPages(int day)
     {
         List<RecipePage> pages = new List<RecipePage>();
@@ -284,7 +346,6 @@ public class RecipeBookUIController : MonoBehaviour
         return pages;
     }
 
-    /// <summary>StationType 순서를 따라 한국어 제조법 단계를 생성합니다. (번호는 1부터 재부여)</summary>
     List<string> BuildSteps(MenuDefinition def)
     {
         List<string> raw = new List<string>();

@@ -3,10 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 에스프레소 머신 레버입니다. 아래로 당겨 홀드하면 추출되고, 놓으면 홀드 시간으로 품질이 판정됩니다.
-/// 임계점(activateFraction) 이상으로 당긴 동안만 추출 시간이 누적됩니다.
-/// </summary>
+/// <summary>에스프레소 머신 레버입니다. 아래로 당겨 홀드하면 추출되고, 놓으면 홀드 시간으로 품질이 판정됩니다.</summary>
 public class EspressoLeverTool : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     [SerializeField] BeverageStationUI station;
@@ -74,7 +71,7 @@ public class EspressoLeverTool : MonoBehaviour, IBeginDragHandler, IDragHandler,
         if (!_dragging || _rect == null)
             return;
 
-        float pulled = Mathf.Clamp(_startY - eventData.position.y, 0f, pullDistance); // 아래로 당김 = 양수
+        float pulled = Mathf.Clamp(_startY - eventData.position.y, 0f, pullDistance);
         _rect.anchoredPosition = new Vector2(_restPos.x, _restPos.y - pulled);
         _currentFraction = pullDistance > 0f ? pulled / pullDistance : 0f;
     }

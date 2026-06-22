@@ -2,11 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 카페 카운터 위의 고정 스테이션 한 칸입니다. (에스프레소 머신, 우유, 시럽, 토핑, 리드, 얼음, 컵 통)
-/// 컵이 이 영역 위로 오면 컨트롤러/컵 핸들러가 해당 동작을 적용합니다.
-/// 배경 스프라이트는 Resources/Sprites/Stations/{StationType}에서 로드되며, 없으면 색으로 표시됩니다.
-/// </summary>
+/// <summary>카페 카운터 위의 고정 스테이션 한 칸입니다.</summary>
 public class CafeStationUI : MonoBehaviour
 {
     [SerializeField] StationType station;

@@ -1,13 +1,9 @@
 using UnityEngine;
 
-/// <summary>
-/// 손님 주문과 완성된 음료를 대조해 점수를 산출합니다.
-/// 점수 = 주문 일치 40% + 양 정확도 30% + 토핑 배치 15% + 인내심 잔여 15%
-/// </summary>
+/// <summary>손님 주문과 완성된 음료를 대조해 점수를 산출합니다.</summary>
 public static class ServingEvaluator
 {
-    // 주문과 '다른 음료'면 완성도가 높아도 돈을 주지 않도록 임계를 높게 둡니다.
-    // (음료 종류 일치가 지급의 1차 관문 — 완성도보다 우선)
+    // 주문과 '다른 음료'면 완성도가 높아도 지급하지 않도록 임계를 높게 둡니다(종류 일치가 1차 관문).
     public const float CorrectMenuThreshold = 0.72f;
     public const float ExactScoreThreshold = 0.82f;
 
@@ -78,7 +74,6 @@ public static class ServingEvaluator
             avgDistance += Vector2.Distance(point, centroid);
         avgDistance /= layer.positions.Count;
 
-        // 0.1~0.3 정도 흩어지면 좋은 배치로 봅니다.
         return Mathf.Clamp01(avgDistance / 0.25f);
     }
 }

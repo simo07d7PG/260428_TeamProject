@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-/// <summary>
-/// 완성된 컵을 손님 카드로 드래그해 서빙하는 조작입니다.
-/// 드롭 지점 아래의 CustomerCardUI를 찾아 ServiceManager에 전달합니다.
-/// </summary>
+/// <summary>완성된 컵을 손님 카드로 드래그해 서빙하는 조작입니다.</summary>
 public class ServeDragInteraction : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     static readonly List<RaycastResult> RaycastResults = new();

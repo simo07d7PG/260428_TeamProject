@@ -3,17 +3,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 영업 중 손님 대기열을 화면 오른쪽에 표시하고 CustomerManager와 연동합니다.
-/// 카드 클릭으로 손님을 선택하며, 인내심 바를 매 프레임 갱신합니다.
-/// </summary>
+/// <summary>영업 중 손님 대기열을 표시하고 CustomerManager와 연동합니다.</summary>
 public class CustomerQueueUIController : MonoBehaviour
 {
     const int MaxCards = 4;
     const float CardWidth = 248f;
     const float CardHeight = 96f;
-    // 상단바(DayFlow HUD, 높이 56) 아래로 대기열을 내려 겹침을 방지합니다.
-    const float TopOffset = 64f;
 
     RectTransform _panelRoot;
     RectTransform _rowRoot;
@@ -27,7 +22,22 @@ public class CustomerQueueUIController : MonoBehaviour
     {
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
-        BuildPanel();
+
+        RectTransform existing = transform.Find("CustomerQueuePanel") as RectTransform;
+        if (existing != null)
+            BindPanel(existing);
+        else
+            BuildPanel();
+
+        UIFontUtility.ApplyToHierarchy(transform);
+    }
+
+    /// <summary>에디터에서 씬에 패널을 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("CustomerQueuePanel") == null)
+            BuildPanel();
         UIFontUtility.ApplyToHierarchy(transform);
     }
 
@@ -78,14 +88,24 @@ public class CustomerQueueUIController : MonoBehaviour
 
     void BuildPanel()
     {
-        // 상단 중앙: [헤더] 위에, 아래에 손님 카드 가로줄
         GameObject panelObject = UIFactoryUtility.CreateUIObject(
             "CustomerQueuePanel", transform, typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
         _panelRoot = panelObject.GetComponent<RectTransform>();
-        _panelRoot.anchorMin = new Vector2(0.5f, 1f);
-        _panelRoot.anchorMax = new Vector2(0.5f, 1f);
-        _panelRoot.pivot = new Vector2(0.5f, 1f);
-        _panelRoot.anchoredPosition = new Vector2(0f, -TopOffset);
+        RectTransform queueMarker = CafeLayoutAnchors.Instance != null ? CafeLayoutAnchors.Instance.queue : null;
+        if (queueMarker != null)
+        {
+            _panelRoot.anchorMin = queueMarker.anchorMin;
+            _panelRoot.anchorMax = queueMarker.anchorMax;
+            _panelRoot.pivot = queueMarker.pivot;
+            _panelRoot.anchoredPosition = queueMarker.anchoredPosition;
+        }
+        else
+        {
+            _panelRoot.anchorMin = new Vector2(0.5f, 1f);
+            _panelRoot.anchorMax = new Vector2(0.5f, 1f);
+            _panelRoot.pivot = new Vector2(0.5f, 1f);
+            _panelRoot.anchoredPosition = new Vector2(0f, -CafeLayoutConfig.QueueTopOffset);
+        }
 
         VerticalLayoutGroup vlayout = panelObject.GetComponent<VerticalLayoutGroup>();
         vlayout.spacing = 4f;
@@ -120,6 +140,23 @@ public class CustomerQueueUIController : MonoBehaviour
         hfitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
         hfitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+        BuildCards();
+    }
+
+    void BindPanel(RectTransform panel)
+    {
+        _panelRoot = panel;
+        _counterText = panel.Find("HeaderText")?.GetComponent<TextMeshProUGUI>();
+        _rowRoot = panel.Find("QueueRow") as RectTransform;
+        BuildCards();
+    }
+
+    void BuildCards()
+    {
+        _cards.Clear();
+        if (_rowRoot == null)
+            return;
+
         for (int i = 0; i < MaxCards; i++)
         {
             CustomerCardUI card = CreateCard(_rowRoot);
@@ -139,7 +176,6 @@ public class CustomerQueueUIController : MonoBehaviour
         Image background = cardObject.GetComponent<Image>();
         background.color = new Color(0.16f, 0.18f, 0.22f, 0.96f);
 
-        // 손님 캐릭터 머리(좌측 아바타) + 표정 오버레이(머리 위)
         Image head = UIFactoryUtility.CreateImage(cardRect, "Head", Color.white);
         RectTransform headRect = head.rectTransform;
         headRect.anchorMin = headRect.anchorMax = new Vector2(0f, 0.5f);
@@ -160,7 +196,6 @@ public class CustomerQueueUIController : MonoBehaviour
         face.raycastTarget = false;
         face.enabled = false;
 
-        // 주문 음료 아이콘(우측 작은 배지)
         Image icon = UIFactoryUtility.CreateImage(cardRect, "Icon", Color.white);
         RectTransform iconRect = icon.rectTransform;
         iconRect.anchorMin = iconRect.anchorMax = new Vector2(1f, 0.5f);

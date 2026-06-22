@@ -3,9 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-/// <summary>
-/// 인벤토리 재료를 Merge 그리드로 드래그할 수 있는 UI 슬롯입니다.
-/// </summary>
+/// <summary>인벤토리 재료를 Merge 그리드로 드래그할 수 있는 UI 슬롯입니다.</summary>
 [RequireComponent(typeof(Image))]
 public class MergeInventoryItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {

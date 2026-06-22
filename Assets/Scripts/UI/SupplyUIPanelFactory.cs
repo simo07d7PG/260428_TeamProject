@@ -2,9 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 발주 UI 패널을 런타임에 구성합니다. 씬에 SupplyPanel이 없을 때 사용합니다.
-/// </summary>
+/// <summary>발주 UI 패널을 런타임에 구성합니다.</summary>
 public static class SupplyUIPanelFactory
 {
     const string PanelName = "SupplyPanel";
@@ -169,9 +167,6 @@ public static class SupplyUIPanelFactory
         }
     }
 
-    /// <summary>
-    /// 부모의 오른쪽 가장자리에 pivot을 고정합니다. width/height가 0이면 앵커 라인만 사용합니다.
-    /// </summary>
     static void PinToRightEdge(RectTransform rect, float width, float height, float insetFromRight = 0f)
     {
         if (rect == null)

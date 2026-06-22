@@ -2,10 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 상단 바(일차, 코인, 영업 시작 버튼/타이머)를 표시하고 ServiceManager와 연동합니다.
-/// 코인을 실시간으로 갱신하고, 준비↔영업 전환 진입점을 제공합니다.
-/// </summary>
+/// <summary>상단 바(일차/코인/타이머/영업 시작)를 표시하고 ServiceManager와 연동합니다.</summary>
 public class DayFlowUIController : MonoBehaviour
 {
     RectTransform _bar;
@@ -21,7 +18,23 @@ public class DayFlowUIController : MonoBehaviour
     {
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
-        BuildBar();
+
+        RectTransform existing = transform.Find("TopBar") as RectTransform;
+        if (existing != null)
+            BindBar(existing);
+        else
+            BuildBar();
+
+        UIFontUtility.ApplyToHierarchy(transform);
+        RefreshMode();
+    }
+
+    /// <summary>에디터에서 씬에 바를 굽기 위한 진입점.</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("TopBar") == null)
+            BuildBar();
         UIFontUtility.ApplyToHierarchy(transform);
     }
 
@@ -29,7 +42,6 @@ public class DayFlowUIController : MonoBehaviour
     {
         if (GameManager.Instance != null)
             GameManager.Instance.OnStateChanged += HandleStateChanged;
-
         RefreshMode();
     }
 
@@ -57,6 +69,21 @@ public class DayFlowUIController : MonoBehaviour
     {
         if (PreparationManager.Instance != null && ServiceManager.Instance == null)
             ManagerUtility.GetOrAddComponent<ServiceManager>(PreparationManager.Instance.gameObject);
+    }
+
+    void BindBar(RectTransform bar)
+    {
+        _bar = bar;
+        _dayText = bar.Find("DayText")?.GetComponent<TextMeshProUGUI>();
+        _coinText = bar.Find("CoinText")?.GetComponent<TextMeshProUGUI>();
+        _timerText = bar.Find("TimerText")?.GetComponent<TextMeshProUGUI>();
+        _servedText = bar.Find("ServedText")?.GetComponent<TextMeshProUGUI>();
+        _startServiceButton = bar.Find("StartServiceButton")?.GetComponent<Button>();
+        if (_startServiceButton != null)
+        {
+            _startServiceButton.onClick.RemoveListener(OnStartServiceClicked);
+            _startServiceButton.onClick.AddListener(OnStartServiceClicked);
+        }
     }
 
     void BuildBar()
@@ -102,10 +129,7 @@ public class DayFlowUIController : MonoBehaviour
         RefreshMode();
     }
 
-    void HandleStateChanged(GameState state)
-    {
-        RefreshMode();
-    }
+    void HandleStateChanged(GameState state) => RefreshMode();
 
     void RefreshMode()
     {
@@ -132,15 +156,13 @@ public class DayFlowUIController : MonoBehaviour
         if (_servedText != null && CustomerManager.Instance != null)
         {
             CustomerManager manager = CustomerManager.Instance;
-            _servedText.text = UIFontUtility.Sanitize(
-                $"서빙 {manager.ServedCount}/{manager.CustomersPerDay}");
+            _servedText.text = UIFontUtility.Sanitize($"서빙 {manager.ServedCount}/{manager.CustomersPerDay}");
         }
     }
 
     static void AnchorLeft(RectTransform rect, float inset, float width)
     {
-        rect.anchorMin = new Vector2(0f, 0.5f);
-        rect.anchorMax = new Vector2(0f, 0.5f);
+        rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
         rect.pivot = new Vector2(0f, 0.5f);
         rect.anchoredPosition = new Vector2(inset, 0f);
         rect.sizeDelta = new Vector2(width, 36f);
@@ -148,8 +170,7 @@ public class DayFlowUIController : MonoBehaviour
 
     static void AnchorCenter(RectTransform rect, float width)
     {
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = Vector2.zero;
         rect.sizeDelta = new Vector2(width, 36f);
@@ -157,8 +178,7 @@ public class DayFlowUIController : MonoBehaviour
 
     static void AnchorRight(RectTransform rect, float inset, float width)
     {
-        rect.anchorMin = new Vector2(1f, 0.5f);
-        rect.anchorMax = new Vector2(1f, 0.5f);
+        rect.anchorMin = rect.anchorMax = new Vector2(1f, 0.5f);
         rect.pivot = new Vector2(1f, 0.5f);
         rect.anchoredPosition = new Vector2(-inset, 0f);
         rect.sizeDelta = new Vector2(width, 36f);

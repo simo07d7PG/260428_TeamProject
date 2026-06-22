@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 메뉴 매칭에 사용하는 정규화된 메뉴 정의입니다.
-/// 하드코드 폴백과 MenuRecipeSO 에셋을 같은 형태로 다룹니다.
-/// </summary>
+/// <summary>메뉴 매칭에 사용하는 정규화된 메뉴 정의입니다.</summary>
 public class MenuDefinition
 {
     public string menuName;
@@ -32,14 +29,11 @@ public class MenuDefinition
     }
 }
 
-/// <summary>
-/// 음료 스냅샷을 메뉴와 대조하는 매칭 엔진이자, 하드코드 폴백 메뉴 카탈로그입니다.
-/// MenuRecipeSO 에셋이 있으면 함께 사용하고, 없으면 폴백만으로 동작합니다.
-/// </summary>
+/// <summary>음료 스냅샷을 메뉴와 대조하는 매칭 엔진이자, 하드코드 폴백 메뉴 카탈로그입니다.</summary>
 public static class MenuCatalog
 {
     public const float MatchThreshold = 0.55f;
-    const float Lv2ToleranceBonus = 0.15f; // Lv2 프리미엄 재료 사용 시 양 허용오차 보너스(머지 보상 강화)
+    const float Lv2ToleranceBonus = 0.15f;
 
     static List<MenuDefinition> _fallback;
 
@@ -103,7 +97,6 @@ public static class MenuCatalog
             }
         };
 
-        // 아이콘 폴백: 하드코드 메뉴는 절차적 아이콘으로 채운다.
         foreach (MenuDefinition def in list)
         {
             if (def.icon == null)
@@ -113,7 +106,6 @@ public static class MenuCatalog
         return list;
     }
 
-    /// <summary>현재 일차에 해금된 전체 메뉴(폴백 + 에셋)를 반환합니다.</summary>
     public static List<MenuDefinition> BuildCatalog(int currentDay)
     {
         List<MenuDefinition> result = new List<MenuDefinition>();
@@ -160,7 +152,6 @@ public static class MenuCatalog
 
         ApplySpecs(def, asset.requiredLayers);
 
-        // 아이콘 폴백: 에셋 icon이 비었으면 절차적 아이콘으로 채운다.
         if (def.icon == null)
             def.icon = ProceduralIconUtility.GetMenuIcon(def);
 
@@ -209,7 +200,6 @@ public static class MenuCatalog
             def.milkAmount = 0f;
     }
 
-    /// <summary>스냅샷에 가장 가까운 메뉴를 찾습니다. 신뢰도가 임계 미만이면 null.</summary>
     public static MenuDefinition Match(BeverageBuildSnapshot snapshot, int currentDay, out float confidence)
     {
         confidence = 0f;
@@ -233,7 +223,6 @@ public static class MenuCatalog
         return bestScore >= MatchThreshold ? best : null;
     }
 
-    /// <summary>메뉴 "종류" 일치도(0~1). 샷/밀크/시럽/토핑 구성이 메뉴와 얼마나 닮았는지.</summary>
     public static float ScoreIdentity(MenuDefinition def, BeverageBuildSnapshot snapshot)
     {
         if (def == null || snapshot == null)
@@ -249,7 +238,6 @@ public static class MenuCatalog
         return Mathf.Clamp01(identity);
     }
 
-    /// <summary>수량 정확도(0~1). Lv2 재료 사용 시 허용 오차에 보너스를 줍니다.</summary>
     public static float ScoreAmounts(MenuDefinition def, BeverageBuildSnapshot snapshot)
     {
         if (def == null || snapshot == null)

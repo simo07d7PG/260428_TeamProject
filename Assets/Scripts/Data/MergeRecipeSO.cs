@@ -1,8 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// Merge 그리드에서 두 재료를 조합할 때 사용하는 레시피 데이터입니다.
-/// </summary>
+/// <summary>Merge 그리드에서 두 재료를 조합할 때 사용하는 레시피 데이터입니다.</summary>
 [CreateAssetMenu(fileName = "NewMergeRecipe", menuName = "CafeSim/Merge Recipe")]
 public class MergeRecipeSO : ScriptableObject
 {

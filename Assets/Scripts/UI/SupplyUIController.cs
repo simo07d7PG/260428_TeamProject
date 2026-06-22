@@ -3,9 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 발주 UI를 표시하고 SupplyManager와 연동합니다.
-/// </summary>
+/// <summary>발주 UI를 표시하고 SupplyManager와 연동합니다.</summary>
 public class SupplyUIController : MonoBehaviour
 {
     [SerializeField] RectTransform drawerRoot;

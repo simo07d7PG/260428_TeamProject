@@ -2,18 +2,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 사진형 카페 카운터 제작 UI를 표시하고 BeverageBuildManager와 연동합니다.
-/// 컵을 머신에 올려 버튼 홀드로 샷 추출, 컵을 내려 재료 도구로 제작, 손님 카드로 끌어 서빙.
-/// 상단 큰 주문 배너에 손님 음료/구성/인내심을 표시하고, 각 칸 아래 재료 변경을 갱신합니다.
-/// </summary>
+/// <summary>사진형 카페 카운터 제작 UI를 표시하고 BeverageBuildManager와 연동합니다.</summary>
 public class BeverageServiceUIController : MonoBehaviour
 {
     BeverageUIPanelFactory.BeverageUIRefs _refs;
     GameState _lastVisibleState = (GameState)(-1);
     bool _externalSubscribed;
     bool _wasActive;
-    bool _cupTaken; // 손님이 컵통을 눌러 컵을 집었는지
+    bool _cupTaken;
 
     public static void ConfigureHostTransform(RectTransform host) => UIFactoryUtility.StretchHost(host);
 
@@ -124,13 +120,24 @@ public class BeverageServiceUIController : MonoBehaviour
     void OnNewCupClicked()
     {
         BeverageBuildManager.Instance?.StartPreviewBuild();
-        TakeCup(); // 미리보기는 즉시 컵을 집어 둠
+        TakeCup();
     }
 
     void OnClearClicked()
     {
-        BeverageBuildManager.Instance?.ClearBuild();
-        SetStatus("컵을 비웠습니다.");
+        if (BeverageBuildManager.Instance == null)
+            return;
+
+        if (BeverageBuildManager.Instance.IsBuildActive)
+        {
+            BeverageBuildManager.Instance.RestartBuild();
+            _refs.cupDrag?.ResetToStack();
+            SetStatus("컵을 비웠습니다. 같은 주문을 다시 만들어 보세요.");
+        }
+        else
+        {
+            SetStatus(ServiceMode ? "먼저 손님을 눌러 주문을 받으세요." : "‘새 컵’으로 시작하세요.");
+        }
     }
 
     void OnGameStateChanged(GameState state)
@@ -158,14 +165,13 @@ public class BeverageServiceUIController : MonoBehaviour
 
         if (active && !_wasActive)
         {
-            _cupTaken = false; // 새 주문: 컵통을 눌러 직접 집어야 함
+            _cupTaken = false;
             SetStatus("컵통을 눌러 컵을 집으세요.");
         }
         if (!active)
             _cupTaken = false;
         _wasActive = active;
 
-        // 컵은 '주문 활성 + 컵을 집었을 때'만 보입니다.
         if (_refs.cupRoot != null)
             _refs.cupRoot.gameObject.SetActive(active && _cupTaken);
 
