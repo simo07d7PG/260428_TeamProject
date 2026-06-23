@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CoffeeBean
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
   ingredientName: "\uCEE4\uD53C \uC6D0\uB450"
-  icon: {fileID: -4996790901853812474, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
+  icon: {fileID: 21300000, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
   buyPrice: 12
   isCritical: 1
   type: 0

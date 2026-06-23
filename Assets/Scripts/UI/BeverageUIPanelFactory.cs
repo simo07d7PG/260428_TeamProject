@@ -50,9 +50,134 @@ public static class BeverageUIPanelFactory
     {
         Transform existing = ManagerUtility.FindDeepChild(hostRoot, PanelName);
         if (existing != null)
-            Object.Destroy(existing.gameObject);
+            return BindExisting(existing);
 
         return CreatePanel(hostRoot);
+    }
+
+    /// <summary>씬에 구워진 BeveragePanel을 재탐색해 런타임 전용 배선을 다시 연결합니다.</summary>
+    public static BeverageUIRefs BindExisting(Transform panelRoot)
+    {
+        BeverageUIRefs refs = new BeverageUIRefs
+        {
+            panelRoot = panelRoot as RectTransform,
+            selectors = new List<MaterialSelectorUI>(),
+            cupStackHome = SlotPos(Anchors?.cupStack, CafeLayoutConfig.CupStackHome),
+            cupHeldHome = SlotPos(Anchors?.cupHeld, CafeLayoutConfig.CupHeldHome),
+            cupMachinePos = SlotPos(Anchors?.cupMachine, CafeLayoutConfig.CupMachinePos)
+        };
+
+        refs.orderIcon = FindImage(panelRoot, "OrderIcon");
+        refs.orderNameText = FindText(panelRoot, "OrderName");
+        refs.orderCompText = FindText(panelRoot, "OrderComp");
+        refs.menuEstimateText = FindText(panelRoot, "Estimate");
+        Transform patienceBar = ManagerUtility.FindDeepChild(panelRoot, "PatienceBar");
+        refs.orderPatienceFill = patienceBar != null ? patienceBar.Find("Fill")?.GetComponent<Image>() : null;
+        refs.statusText = FindText(panelRoot, "StatusText");
+
+        refs.serveZone = ManagerUtility.FindDeepChild(panelRoot, "ServeZone") as RectTransform;
+        refs.cupStackButton = FindButton(panelRoot, "CupStack");
+
+        refs.cupCanvas = panelRoot.GetComponentInChildren<CupCanvasUI>(true);
+        refs.cupDrag = panelRoot.GetComponentInChildren<CupDragHandler>(true);
+        if (refs.cupCanvas != null)
+        {
+            Transform cup = refs.cupCanvas.transform;
+            refs.cupRoot = cup as RectTransform;
+            refs.cupCanvas.Bind(
+                ManagerUtility.FindDeepChild(cup, "LiquidArea") as RectTransform,
+                ManagerUtility.FindDeepChild(cup, "DecorArea") as RectTransform,
+                FindImage(cup, "EspressoFill"),
+                FindImage(cup, "MilkFill"),
+                FindImage(cup, "Lid"),
+                FindText(cup, "EmptyHint"));
+        }
+
+        refs.machineButton = panelRoot.GetComponentInChildren<MachineButtonInteraction>(true);
+        if (refs.machineButton != null)
+        {
+            refs.machineButtonRect = refs.machineButton.transform as RectTransform;
+            refs.machineNeedle = ManagerUtility.FindDeepChild(refs.machineButton.transform, "Needle") as RectTransform;
+        }
+        refs.machineSlot = ManagerUtility.FindDeepChild(panelRoot, "CupSlot") as RectTransform;
+        refs.machineLabel = FindText(panelRoot, "MachineLabel");
+
+        foreach (BeverageTool tool in panelRoot.GetComponentsInChildren<BeverageTool>(true))
+        {
+            BeverageToolKind kind = ToolKind(tool.gameObject.name);
+            tool.Bind(kind, refs.cupCanvas);
+            switch (kind)
+            {
+                case BeverageToolKind.Milk: refs.milkTool = tool; break;
+                case BeverageToolKind.Ice: refs.iceTool = tool; break;
+                case BeverageToolKind.Topping: refs.toppingTool = tool; break;
+                case BeverageToolKind.Syrup: refs.syrupTool = tool; break;
+            }
+        }
+
+        foreach (MaterialSelectorUI selector in panelRoot.GetComponentsInChildren<MaterialSelectorUI>(true))
+        {
+            Transform t = selector.transform;
+            Button left = t.Find("Left")?.GetComponent<Button>();
+            Button right = t.Find("Right")?.GetComponent<Button>();
+            left?.onClick.RemoveAllListeners();
+            right?.onClick.RemoveAllListeners();
+            selector.Bind(
+                SelectorType(selector.gameObject.name),
+                t.Find("Label")?.GetComponent<TextMeshProUGUI>(),
+                left,
+                right);
+            refs.selectors.Add(selector);
+        }
+
+        // 컵 도킹 3위치(stack/held/machine)를 씬에 배치된 실제 오브젝트에서 직접 유도해
+        // 사용자가 옮긴 레이아웃에 정확히 맞춘다(config 폴백은 런타임 빌드 경로에서만 사용).
+        if (refs.cupRoot != null)
+            refs.cupStackHome = refs.cupRoot.anchoredPosition;
+        if (refs.machineSlot != null)
+            refs.cupMachinePos = refs.machineSlot.anchoredPosition;
+        refs.cupHeldHome = Vector2.Lerp(refs.cupStackHome, refs.cupMachinePos, 0.5f);
+
+        if (refs.cupDrag != null)
+            refs.cupDrag.Bind(refs.machineSlot, refs.machineButtonRect, refs.serveZone, refs.cupMachinePos, refs.cupHeldHome, refs.cupStackHome);
+        if (refs.machineButton != null)
+            refs.machineButton.Bind(refs.machineNeedle, refs.cupDrag);
+
+        return refs;
+    }
+
+    static Image FindImage(Transform root, string name)
+    {
+        Transform t = ManagerUtility.FindDeepChild(root, name);
+        return t != null ? t.GetComponent<Image>() : null;
+    }
+
+    static TextMeshProUGUI FindText(Transform root, string name)
+    {
+        Transform t = ManagerUtility.FindDeepChild(root, name);
+        return t != null ? t.GetComponent<TextMeshProUGUI>() : null;
+    }
+
+    static Button FindButton(Transform root, string name)
+    {
+        Transform t = ManagerUtility.FindDeepChild(root, name);
+        return t != null ? t.GetComponent<Button>() : null;
+    }
+
+    static BeverageToolKind ToolKind(string objectName)
+    {
+        if (objectName.EndsWith("Ice")) return BeverageToolKind.Ice;
+        if (objectName.EndsWith("Topping")) return BeverageToolKind.Topping;
+        if (objectName.EndsWith("Syrup")) return BeverageToolKind.Syrup;
+        return BeverageToolKind.Milk;
+    }
+
+    static IngredientType SelectorType(string objectName)
+    {
+        if (objectName.EndsWith("Milk")) return IngredientType.Milk;
+        if (objectName.EndsWith("Topping")) return IngredientType.Topping;
+        if (objectName.EndsWith("Syrup")) return IngredientType.Syrup;
+        return IngredientType.Base;
     }
 
     static CafeLayoutAnchors Anchors => CafeLayoutAnchors.Instance;
@@ -77,7 +202,7 @@ public static class BeverageUIPanelFactory
         }
     }
 
-    static BeverageUIRefs CreatePanel(Transform hostRoot)
+    public static BeverageUIRefs CreatePanel(Transform hostRoot)
     {
         GameObject panelObject = CreateUIObject(PanelName, hostRoot, typeof(Image));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();

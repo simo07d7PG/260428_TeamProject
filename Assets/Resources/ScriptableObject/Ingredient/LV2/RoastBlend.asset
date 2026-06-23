@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: RoastBlend
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
   ingredientName: "\uB85C\uC2A4\uD305 \uBE14\uB79C\uB4DC"
-  icon: {fileID: -4996790901853812474, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
+  icon: {fileID: 21300000, guid: a3e7aeb0f97c5a94f9a458847d5ae1dc, type: 3}
   buyPrice: 0
   isCritical: 0
   type: 0

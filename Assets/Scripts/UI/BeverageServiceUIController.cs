@@ -17,10 +17,20 @@ public class BeverageServiceUIController : MonoBehaviour
     {
         ConfigureHostTransform(transform as RectTransform);
         EnsureManagers();
+
         _refs = BeverageUIPanelFactory.EnsurePanel(transform);
         UIFontUtility.ApplyToHierarchy(transform);
         BindButtons();
         WireCallbacks();
+    }
+
+    /// <summary>에디터에서 씬에 카운터 패널을 굽기 위한 진입점. (이벤트 구독 없음)</summary>
+    public void EditorBuild()
+    {
+        ConfigureHostTransform(transform as RectTransform);
+        if (transform.Find("BeveragePanel") == null)
+            BeverageUIPanelFactory.CreatePanel(transform);
+        UIFontUtility.ApplyToHierarchy(transform);
     }
 
     void WireCallbacks()

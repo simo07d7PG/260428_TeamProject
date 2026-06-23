@@ -18,6 +18,7 @@ public class SupplyUIController : MonoBehaviour
 
     readonly Dictionary<IngredientSO, int> _orderQuantities = new();
     readonly List<SupplyOrderRowUI> _rows = new();
+    GameState _lastVisibleState = (GameState)(-1);
 
     public static void ConfigureHostTransform(RectTransform host)
     {
@@ -60,6 +61,25 @@ public class SupplyUIController : MonoBehaviour
 
         if (PreparationManager.Instance != null)
             PreparationManager.Instance.OnInventoryChanged -= HandleInventoryChanged;
+    }
+
+    void Update()
+    {
+        RefreshVisibility();
+    }
+
+    /// <summary>발주 드로어는 준비(Preparation) 단계에서만 표시하고, 제작/정산 단계에서는 숨깁니다.</summary>
+    void RefreshVisibility()
+    {
+        if (drawerRoot == null || GameManager.Instance == null)
+            return;
+
+        GameState state = GameManager.Instance.CurrentState;
+        if (state == _lastVisibleState)
+            return;
+
+        _lastVisibleState = state;
+        drawerRoot.gameObject.SetActive(state == GameState.Preparation);
     }
 
     void HandleInventoryChanged()

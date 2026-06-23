@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PremieumMilk
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
   ingredientName: "\uACE0\uAE09 \uC6B0\uC720"
-  icon: {fileID: -5110731548806032159, guid: e24c2678f127e7a40bd24f5dd12697fb, type: 3}
+  icon: {fileID: 21300000, guid: e24c2678f127e7a40bd24f5dd12697fb, type: 3}
   buyPrice: 0
   isCritical: 0
   type: 1

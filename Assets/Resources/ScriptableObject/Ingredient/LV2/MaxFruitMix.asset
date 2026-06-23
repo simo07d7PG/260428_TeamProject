@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MaxFruitMix
   m_EditorClassIdentifier: Assembly-CSharp::IngredientSO
   ingredientName: "\uC2DC\uADF8\uB2C8\uCC98 \uD4CC\uB808"
-  icon: {fileID: 21300000, guid: 65623c644a6338d44984a39e1bef6b70, type: 3}
+  icon: {fileID: 21300000, guid: d37ee30b0ef25c342a4793696df32629, type: 3}
   buyPrice: 0
   isCritical: 0
   type: 3
