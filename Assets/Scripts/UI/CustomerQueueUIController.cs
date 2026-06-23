@@ -7,7 +7,7 @@ using UnityEngine.UI;
 public class CustomerQueueUIController : MonoBehaviour
 {
     const int MaxCards = 4;
-    const float CardWidth = 248f;
+    const float CardWidth = 310f;
     const float CardHeight = 96f;
 
     RectTransform _panelRoot;
@@ -157,6 +157,15 @@ public class CustomerQueueUIController : MonoBehaviour
         if (_rowRoot == null)
             return;
 
+        for (int i = _rowRoot.childCount - 1; i >= 0; i--)
+        {
+            GameObject child = _rowRoot.GetChild(i).gameObject;
+            if (Application.isPlaying)
+                Destroy(child);
+            else
+                DestroyImmediate(child);
+        }
+
         for (int i = 0; i < MaxCards; i++)
         {
             CustomerCardUI card = CreateCard(_rowRoot);
@@ -180,8 +189,8 @@ public class CustomerQueueUIController : MonoBehaviour
         RectTransform headRect = head.rectTransform;
         headRect.anchorMin = headRect.anchorMax = new Vector2(0f, 0.5f);
         headRect.pivot = new Vector2(0f, 0.5f);
-        headRect.anchoredPosition = new Vector2(8f, 0f);
-        headRect.sizeDelta = new Vector2(62f, 62f);
+        headRect.anchoredPosition = new Vector2(74f, 0f);
+        headRect.sizeDelta = new Vector2(60f, 60f);
         head.preserveAspect = true;
         head.raycastTarget = false;
         head.enabled = false;
@@ -190,8 +199,8 @@ public class CustomerQueueUIController : MonoBehaviour
         RectTransform faceRect = face.rectTransform;
         faceRect.anchorMin = faceRect.anchorMax = new Vector2(0f, 0.5f);
         faceRect.pivot = new Vector2(0f, 0.5f);
-        faceRect.anchoredPosition = new Vector2(8f, 0f);
-        faceRect.sizeDelta = new Vector2(62f, 62f);
+        faceRect.anchoredPosition = new Vector2(10f, 0f);
+        faceRect.sizeDelta = new Vector2(56f, 56f);
         face.preserveAspect = true;
         face.raycastTarget = false;
         face.enabled = false;
@@ -213,7 +222,7 @@ public class CustomerQueueUIController : MonoBehaviour
         nameRect.anchorMin = new Vector2(0f, 1f);
         nameRect.anchorMax = new Vector2(1f, 1f);
         nameRect.pivot = new Vector2(0f, 1f);
-        nameRect.offsetMin = new Vector2(78f, -34f);
+        nameRect.offsetMin = new Vector2(142f, -34f);
         nameRect.offsetMax = new Vector2(-52f, -6f);
 
         TextMeshProUGUI phrase = UIFactoryUtility.CreateLabel(cardRect, "PhraseText", string.Empty, 13f);
@@ -223,7 +232,7 @@ public class CustomerQueueUIController : MonoBehaviour
         phraseRect.anchorMin = new Vector2(0f, 1f);
         phraseRect.anchorMax = new Vector2(1f, 1f);
         phraseRect.pivot = new Vector2(0f, 1f);
-        phraseRect.offsetMin = new Vector2(78f, -56f);
+        phraseRect.offsetMin = new Vector2(142f, -56f);
         phraseRect.offsetMax = new Vector2(-52f, -36f);
 
         Image patienceFill = UIFactoryUtility.CreateFilledBar(
@@ -234,7 +243,7 @@ public class CustomerQueueUIController : MonoBehaviour
         barRect.anchorMin = new Vector2(0f, 0f);
         barRect.anchorMax = new Vector2(1f, 0f);
         barRect.pivot = new Vector2(0.5f, 0f);
-        barRect.offsetMin = new Vector2(78f, 12f);
+        barRect.offsetMin = new Vector2(142f, 12f);
         barRect.offsetMax = new Vector2(-52f, 26f);
 
         CustomerCardUI card = cardObject.GetComponent<CustomerCardUI>();

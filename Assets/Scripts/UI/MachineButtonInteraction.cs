@@ -56,6 +56,7 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
         _holding = true;
         _fill = 0f;
         UpdateNeedle();
+        AudioManager.PlayHold("shot_extract");
         OnResult?.Invoke("추출 중… 초록 구역에서 떼세요.");
     }
 
@@ -66,22 +67,20 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
 
         _holding = false;
 
+        bool success = false;
         if (_fill >= MinFill && BeverageBuildManager.Instance != null)
         {
-            if (BeverageBuildManager.Instance.AddPulledShot(QualityFromFill(_fill), _heldBean, _heldLevel, out string message))
-            {
-                AudioManager.PlaySfx("shot_extract");
-                OnResult?.Invoke(message);
-            }
-            else
-            {
-                OnResult?.Invoke(message);
-            }
+            success = BeverageBuildManager.Instance.AddPulledShot(QualityFromFill(_fill), _heldBean, _heldLevel, out string message);
+            OnResult?.Invoke(message);
         }
         else
         {
             OnResult?.Invoke("추출 실패 — 원두를 버렸습니다.");
         }
+
+        // 성공: 홀드 사운드를 끊지 않아 클립이 끝까지 재생됨. 실패: 즉시 끊음.
+        if (!success)
+            AudioManager.StopHold();
 
         _heldBean = null;
         _heldLevel = 1;
@@ -101,6 +100,7 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
             _heldLevel = 1;
             _fill = 0f;
             UpdateNeedle();
+            AudioManager.StopHold();
             OnResult?.Invoke("추출 취소 — 원두를 버렸습니다.");
             return;
         }
@@ -128,10 +128,13 @@ public class MachineButtonInteraction : MonoBehaviour, IPointerDownHandler, IPoi
 
     void OnDisable()
     {
+        bool wasHolding = _holding;
         _holding = false;
         _heldBean = null;
         _heldLevel = 1;
         _fill = 0f;
         UpdateNeedle();
+        if (wasHolding)
+            AudioManager.StopHold();
     }
 }

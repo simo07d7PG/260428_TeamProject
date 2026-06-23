@@ -136,7 +136,12 @@ public static class BeverageUIPanelFactory
             refs.cupStackHome = refs.cupRoot.anchoredPosition;
         if (refs.machineSlot != null)
             refs.cupMachinePos = refs.machineSlot.anchoredPosition;
-        refs.cupHeldHome = Vector2.Lerp(refs.cupStackHome, refs.cupMachinePos, 0.5f);
+        // 컵 held 위치는 씬의 "Held" 마커 오브젝트(호스트 직속, 패널과 동좌표계) 위치를 사용한다.
+        Transform heldMarker = panelRoot.parent != null ? ManagerUtility.FindDeepChild(panelRoot.parent, "Held") : null;
+        if (heldMarker is RectTransform heldRect)
+            refs.cupHeldHome = heldRect.anchoredPosition;
+        else
+            refs.cupHeldHome = Vector2.Lerp(refs.cupStackHome, refs.cupMachinePos, 0.5f);
 
         if (refs.cupDrag != null)
             refs.cupDrag.Bind(refs.machineSlot, refs.machineButtonRect, refs.serveZone, refs.cupMachinePos, refs.cupHeldHome, refs.cupStackHome);

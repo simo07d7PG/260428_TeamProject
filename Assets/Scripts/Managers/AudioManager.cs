@@ -10,6 +10,7 @@ public class AudioManager : MonoBehaviour
     readonly Dictionary<string, AudioClip> _cache = new();
     AudioSource _source;
     AudioSource _bgmSource;
+    AudioSource _holdSource;
     bool _subscribed;
 
     void Awake()
@@ -29,6 +30,11 @@ public class AudioManager : MonoBehaviour
         _bgmSource.playOnAwake = false;
         _bgmSource.loop = true;
         _bgmSource.spatialBlend = 0f;
+
+        _holdSource = gameObject.AddComponent<AudioSource>();
+        _holdSource.playOnAwake = false;
+        _holdSource.loop = false;
+        _holdSource.spatialBlend = 0f;
     }
 
     void Start()
@@ -74,6 +80,32 @@ public class AudioManager : MonoBehaviour
         AudioClip clip = Resolve(key);
         if (clip != null)
             _source.PlayOneShot(clip, Mathf.Clamp01(volume));
+    }
+
+    public static void PlayHold(string key, float volume = 1f) => Instance?.PlayHoldInternal(key, volume);
+
+    public static void StopHold() => Instance?.StopHoldInternal();
+
+    /// <summary>홀드 지속음을 재생합니다. 실패 시 StopHold로 즉시 끊고, 성공 시 끊지 않아 클립이 끝까지 재생됩니다.</summary>
+    void PlayHoldInternal(string key, float volume)
+    {
+        if (_holdSource == null || string.IsNullOrEmpty(key))
+            return;
+
+        AudioClip clip = Resolve(key);
+        if (clip == null)
+            return;
+
+        _holdSource.clip = clip;
+        _holdSource.volume = Mathf.Clamp01(volume);
+        _holdSource.loop = false;
+        _holdSource.Play();
+    }
+
+    void StopHoldInternal()
+    {
+        if (_holdSource != null && _holdSource.isPlaying)
+            _holdSource.Stop();
     }
 
     AudioClip Resolve(string key)
